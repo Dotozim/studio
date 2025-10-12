@@ -4,8 +4,9 @@ import * as React from "react";
 import { Calendar as UICalendar, CalendarProps as UICalendarProps } from "@/components/ui/calendar";
 import { useHabitStore } from "@/lib/store";
 import type { Habit } from "@/lib/types";
-import { parseISO } from "date-fns";
+import { parseISO, format } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type HabitCalendarProps = Omit<UICalendarProps, 'mode' | 'onSelect' | 'selected'> & {
   month: Date;
@@ -57,13 +58,31 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelec
       }}
       month={month}
       onMonthChange={onMonthChange}
-      onCaptionClick={!disableNav && onMonthSelect ? () => onMonthSelect(month) : undefined}
-      disableNav={disableNav}
+      captionLayout={disableNav ? "dropdown" : "buttons"}
+      components={{
+        IconLeft: () => <ChevronLeft className="h-4 w-4" />,
+        IconRight: () => <ChevronRight className="h-4 w-4" />,
+        Caption: ({ ...props }) => {
+          if (disableNav) {
+            return null;
+          }
+          return (
+            <div
+              className={cn("flex justify-center pt-1 relative items-center", !disableNav && onMonthSelect ? 'cursor-pointer hover:bg-accent rounded-md' : '')}
+              onClick={!disableNav && onMonthSelect ? () => onMonthSelect(month) : undefined}
+              role={!disableNav && onMonthSelect ? 'button' : 'heading'}
+              aria-live="polite"
+            >
+              <h2 className="text-lg font-medium font-headline">{format(props.displayMonth, "MMMM yyyy")}</h2>
+            </div>
+          );
+        },
+      }}
       className="p-0"
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4 w-full",
-        caption: `flex justify-center pt-1 relative items-center ${!disableNav && onMonthSelect ? 'cursor-pointer hover:bg-accent rounded-md' : ''}`,
+        caption: `flex justify-center pt-1 relative items-center`,
         caption_label: "text-lg font-medium font-headline",
         nav: `space-x-1 flex items-center ${disableNav ? 'hidden' : ''}`,
         nav_button: `h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100`,
@@ -78,10 +97,6 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelec
       }}
       modifiers={modifiers}
       modifiersClassNames={modifiersClassNames}
-      components={{
-        IconLeft: () => <ChevronLeft className="h-4 w-4" />,
-        IconRight: () => <ChevronRight className="h-4 w-4" />,
-      }}
       {...props}
     />
   );

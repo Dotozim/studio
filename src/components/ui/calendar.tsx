@@ -17,7 +17,6 @@ import {
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker> & {
   onCaptionClick?: () => void;
-  disableNav?: boolean;
 }
 
 function Calendar({
@@ -25,7 +24,6 @@ function Calendar({
   classNames,
   showOutsideDays = true,
   onCaptionClick,
-  disableNav,
   ...props
 }: CalendarProps) {
   return (
@@ -38,7 +36,7 @@ function Calendar({
         caption: "flex justify-center pt-1 relative items-center",
         caption_label: "text-sm font-medium",
         caption_dropdowns: "flex justify-center gap-1",
-        nav: cn("space-x-1 flex items-center", { "hidden": disableNav }),
+        nav: "space-x-1 flex items-center",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
           "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
@@ -70,24 +68,7 @@ function Calendar({
       components={{
         IconLeft: ({ ...props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ...props }) => <ChevronRight className="h-4 w-4" />,
-        Caption: ({ ...props }) => {
-          if (disableNav) {
-            // In year view, we render the caption in YearlyCalendar, so we can return null here to avoid duplication
-            // and have a cleaner structure.
-            return null;
-          }
-          const captionContent = format(props.displayMonth, "MMMM yyyy");
-          return (
-            <div
-              className={cn("flex justify-center pt-1 relative items-center", classNames?.caption)}
-              onClick={onCaptionClick}
-              role={onCaptionClick ? 'button' : 'heading'}
-              aria-live="polite"
-            >
-              <h2 className={classNames?.caption_label}>{captionContent}</h2>
-            </div>
-          );
-        },
+        ...props.components
       }}
       {...props}
     />
