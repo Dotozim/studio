@@ -29,7 +29,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, disableNav =
   const socialDays = entries
     .filter(
       (entry) =>
-        entry.partner && entry.partner.trim() !== ""
+        entry.social && entry.social.count > 0
     )
     .map((entry) => {
       return parseISO(entry.date);

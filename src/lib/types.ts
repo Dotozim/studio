@@ -6,5 +6,8 @@ export interface HabitEntry {
   habits: {
     [key in Habit]?: { [key in TimeOfDay]?: number };
   };
-  partner?: string;
+  social?: {
+    partner?: string;
+    count: number;
+  };
 }

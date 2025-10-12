@@ -27,7 +27,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useHabitStore } from "@/lib/store";
 import type { Habit, HabitEntry, TimeOfDay } from "@/lib/types";
-import { Minus, Plus, Sun, Moon, Sunrise, Sunset, HelpCircle } from "lucide-react";
+import { Minus, Plus, Sun, Moon, Sunrise, Sunset, HelpCircle, Users } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 import { Separator } from "./ui/separator";
 import { ScrollArea } from "./ui/scroll-area";
@@ -47,15 +47,18 @@ const timesOfDay: { id: TimeOfDay; label: string; icon: React.ElementType }[] = 
 
 const formSchema = z.object({
   habits: z.record(z.string(), z.record(z.string(), z.number().optional()).optional()),
-  partner: z.string().optional(),
+  social: z.object({
+    partner: z.string().optional(),
+    count: z.number().optional(),
+  }).optional(),
 }).refine((data) => {
   const hasHabits = Object.values(data.habits).some(habitTimes => 
     habitTimes && Object.values(habitTimes).some(count => count && count > 0)
   );
-  const hasPartner = data.partner && data.partner.trim() !== '';
-  return hasHabits || hasPartner;
+  const hasSocial = data.social && data.social.count && data.social.count > 0;
+  return hasHabits || hasSocial;
 }, {
-  message: "You must log at least one habit or enter a partner.",
+  message: "You must log at least one habit or social interaction.",
   path: ["habits"],
 });
 
@@ -79,7 +82,7 @@ export function HabitDialog({
     resolver: zodResolver(formSchema),
     defaultValues: {
       habits: entry?.habits || {},
-      partner: entry?.partner || "",
+      social: entry?.social || { count: 0, partner: '' },
     },
   });
 
@@ -87,7 +90,7 @@ export function HabitDialog({
     if (isOpen) {
       form.reset({
         habits: entry?.habits || {},
-        partner: entry?.partner || "",
+        social: entry?.social || { count: 0, partner: '' },
       });
     }
   }, [isOpen, entry, form]);
@@ -97,7 +100,7 @@ export function HabitDialog({
     const newEntry: HabitEntry = {
       date: format(date, "yyyy-MM-dd"),
       habits: values.habits as HabitEntry['habits'],
-      partner: values.partner,
+      social: values.social,
     };
     setHabitEntry(newEntry);
     setIsOpen(false);
@@ -119,7 +122,7 @@ export function HabitDialog({
                 <div>
                   <FormLabel>Completed Habits</FormLabel>
                   <FormDescription>
-                    Use the buttons to log how many times you completed each habit at different times of the day.
+                    Use the buttons to log how many times you completed each habit.
                   </FormDescription>
                 </div>
                 {habits.map((habit) => (
@@ -174,24 +177,68 @@ export function HabitDialog({
                       </CollapsibleContent>
                   </Collapsible>
                 ))}
-                 <FormMessage>{form.formState.errors.habits?.message}</FormMessage>
+                <FormMessage>{form.formState.errors.habits?.message}</FormMessage>
               
-                <FormField
-                  control={form.control}
-                  name="partner"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Partner</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Name of person (optional)" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Did someone join you? Add their name here.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <Collapsible className="rounded-lg border p-4">
+                    <CollapsibleTrigger asChild>
+                      <div className="flex items-center justify-between w-full cursor-pointer">
+                        <FormLabel className="text-base font-normal flex items-center gap-2"><Users /> Social</FormLabel>
+                        <Button type="button" variant="ghost" size="sm" className="w-9 p-0">
+                            <Plus className="h-4 w-4" />
+                            <span className="sr-only">Toggle</span>
+                        </Button>
+                      </div>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="space-y-4 pt-4">
+                      <Separator />
+                        <FormField
+                            control={form.control}
+                            name="social.count"
+                            render={({ field }) => (
+                                <FormItem className="flex items-center justify-between p-2 rounded-lg">
+                                    <FormLabel className="text-sm font-normal">Count</FormLabel>
+                                    <div className="flex items-center gap-2">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        onClick={() => field.onChange(Math.max(0, (field.value || 0) - 1))}
+                                    >
+                                        <Minus className="h-4 w-4" />
+                                    </Button>
+                                    <span className="w-8 text-center text-lg font-bold">{field.value || 0}</span>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        onClick={() => field.onChange((field.value || 0) + 1)}
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                    </Button>
+                                    </div>
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="social.partner"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Partner</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="Name of person (optional)" {...field} />
+                                </FormControl>
+                                <FormDescription>
+                                    Did someone join you? Add their name here.
+                                </FormDescription>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </CollapsibleContent>
+                </Collapsible>
               </div>
             </ScrollArea>
             <DialogFooter className="pt-4">

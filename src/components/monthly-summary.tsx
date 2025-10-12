@@ -35,17 +35,19 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
   const bobCount = countHabits("BOB");
   const flCount = countHabits("FL");
   
+  const socialCount = monthlyEntries.reduce((acc, entry) => {
+    return acc + (entry.social?.count || 0);
+  }, 0);
+
   const partnerCounts = monthlyEntries.reduce((acc, entry) => {
-    if (entry.partner && entry.partner.trim()) {
-      const partnerName = entry.partner.trim();
-      acc[partnerName] = (acc[partnerName] || 0) + 1;
+    if (entry.social && entry.social.count > 0 && entry.social.partner && entry.social.partner.trim()) {
+      const partnerName = entry.social.partner.trim();
+      acc[partnerName] = (acc[partnerName] || 0) + entry.social.count;
     }
     return acc;
   }, {} as Record<string, number>);
   
-  const socialCount = Object.values(partnerCounts).reduce((sum, count) => sum + count, 0);
   const total = bobCount + flCount + socialCount;
-
 
   return (
     <Card className="shadow-lg">
@@ -65,12 +67,17 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
           <span className="font-semibold text-accent-foreground">{flCount}</span>
         </div>
         
+        <div className="flex justify-between items-center p-3 rounded-lg bg-destructive/20">
+          <span className="font-medium text-destructive-foreground">Social</span>
+          <span className="font-semibold text-destructive-foreground">{socialCount}</span>
+        </div>
+        
         {Object.keys(partnerCounts).length > 0 && (
           <>
             <Separator />
-            <p className="font-medium text-muted-foreground pt-2">Socials</p>
+            <p className="font-medium text-muted-foreground pt-2">Partners</p>
             {Object.entries(partnerCounts).map(([name, count]) => (
-              <div key={name} className="flex justify-between items-center p-3 rounded-lg bg-destructive/20">
+              <div key={name} className="flex justify-between items-center p-3 rounded-lg bg-destructive/10">
                 <span className="font-medium text-destructive-foreground">{name}</span>
                 <span className="font-semibold text-destructive-foreground">{count}</span>
               </div>
