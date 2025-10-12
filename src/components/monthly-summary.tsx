@@ -59,8 +59,8 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
       </CardHeader>
       <CardContent className="space-y-4 text-sm">
         <div className="flex justify-between items-center p-3 rounded-lg bg-primary/20">
-          <span className="font-medium text-primary-foreground">BOB</span>
-          <span className="font-semibold text-primary-foreground">{bobCount}</span>
+          <span className="font-medium text-card-foreground">BOB</span>
+          <span className="font-semibold text-card-foreground">{bobCount}</span>
         </div>
         <div className="flex justify-between items-center p-3 rounded-lg bg-accent/30">
           <span className="font-medium text-accent-foreground">FL</span>
@@ -68,8 +68,8 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
         </div>
         
         <div className="flex justify-between items-center p-3 rounded-lg bg-destructive/20">
-          <span className="font-medium text-destructive-foreground">Social</span>
-          <span className="font-semibold text-destructive-foreground">{socialCount}</span>
+          <span className="font-medium text-card-foreground">Social</span>
+          <span className="font-semibold text-card-foreground">{socialCount}</span>
         </div>
         
         {Object.keys(partnerCounts).length > 0 && (
@@ -78,8 +78,8 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
             <p className="font-medium text-muted-foreground pt-2">Partners</p>
             {Object.entries(partnerCounts).map(([name, count]) => (
               <div key={name} className="flex justify-between items-center p-3 rounded-lg bg-destructive/10">
-                <span className="font-medium text-destructive-foreground">{name}</span>
-                <span className="font-semibold text-destructive-foreground">{count}</span>
+                <span className="font-medium text-card-foreground">{name}</span>
+                <span className="font-semibold text-card-foreground">{count}</span>
               </div>
             ))}
           </>
