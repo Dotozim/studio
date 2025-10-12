@@ -43,25 +43,25 @@ body {
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
   .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 197 71% 73%;
-    --primary-foreground: 197 89% 10%;
-    --secondary: 240 30% 20%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 240 30% 20%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 240 30% 20%;
-    --accent-foreground: 210 40% 98%;
+    --background: 25 20% 8%; /* Dark, earthy brown */
+    --foreground: 30 10% 85%; /* Off-white / light sand */
+    --card: 25 20% 12%; /* Slightly lighter brown for cards */
+    --card-foreground: 30 10% 85%;
+    --popover: 25 20% 12%;
+    --popover-foreground: 30 10% 85%;
+    --primary: 30 70% 60%; /* A warm, earthy orange */
+    --primary-foreground: 30 90% 10%;
+    --secondary: 40 40% 20%; /* Muted olive/brown */
+    --secondary-foreground: 40 10% 90%;
+    --muted: 40 40% 15%;
+    --muted-foreground: 30 10% 60%;
+    --accent: 40 40% 25%; /* A slightly more saturated olive for accents */
+    --accent-foreground: 40 10% 90%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 217 33% 17%;
-    --input: 217 33% 17%;
-    --ring: 197 71% 73%;
+    --border: 30 20% 25%; /* Earthy border color */
+    --input: 30 20% 25%;
+    --ring: 30 70% 60%; /* Ring matches primary */
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
