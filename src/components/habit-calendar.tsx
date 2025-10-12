@@ -63,7 +63,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect }: HabitCalen
         head_cell: "text-muted-foreground rounded-md w-9 font-normal text-sm",
         row: "flex w-full mt-2 justify-around",
         day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 rounded-md",
-        day_selected:"bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+        day_selected:"bg-primary/20 text-primary-foreground hover:bg-primary/30",
       }}
       modifiers={modifiers}
       modifiersClassNames={modifiersClassNames}
