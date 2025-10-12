@@ -98,7 +98,6 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
         }
 
         let currentHabit: Habit | 'social' | null = null;
-        let currentPartner: string | null = null;
         
         for (let j = 1; j < parts.length; j++) {
             let part = parts[j];
@@ -111,7 +110,6 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
 
             if (validHabits.includes(partUpper as Habit)) {
                 currentHabit = partUpper as Habit;
-                currentPartner = null;
                 const nextPartIsTime = nextPart && validTimes.includes(nextPart.toLowerCase() as TimeOfDay);
                 const nextPartIsQuantity = nextPart && nextPart.toLowerCase().startsWith('x');
 
@@ -120,11 +118,12 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
                         ...entry.habits[currentHabit],
                         'not-sure': (entry.habits[currentHabit]?.['not-sure'] || 0) + 1,
                     };
+                    currentHabit = null; // Reset after logging
                 }
             } else if (validTimes.includes(part as TimeOfDay)) {
                 const time: TimeOfDay = part as TimeOfDay;
                 if (currentHabit) {
-                     if (currentPartner) {
+                     if (currentHabit === 'social') {
                         entry.social!.times![time] = (entry.social!.times![time] || 0) + 1;
                         entry.social!.count = (entry.social!.count || 0) + 1;
                     } else {
@@ -133,12 +132,13 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
                             [time]: (entry.habits[currentHabit]?.[time] || 0) + 1,
                         };
                     }
+                    currentHabit = null; // Reset after logging
                 }
             } else if (part.toLowerCase().startsWith('x') && !isNaN(parseInt(part.substring(1), 10))) {
                 const count = parseInt(part.substring(1), 10);
                 if (currentHabit) {
                      const time: TimeOfDay = (nextPart && validTimes.includes(nextPart as TimeOfDay)) ? nextPart as TimeOfDay : 'not-sure';
-                     if (currentPartner) {
+                     if (currentHabit === 'social') {
                          entry.social!.times![time] = (entry.social!.times![time] || 0) + count;
                          entry.social!.count = (entry.social!.count || 0) + count;
                      } else {
@@ -148,10 +148,11 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
                         };
                      }
                      if (time !== 'not-sure') j++; // Skip next part since it's used as time
+                     currentHabit = null; // Reset after logging
                 }
             } else { // It's a partner name
                 currentHabit = 'social';
-                currentPartner = part;
+                const currentPartner = part;
                 if (!entry.social!.partners!.includes(currentPartner)) {
                     entry.social!.partners!.push(currentPartner);
                 }
@@ -161,6 +162,7 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
                 if (!nextPart || (!nextPartIsTime && !nextPartIsQuantity)) {
                      entry.social!.times!['not-sure'] = (entry.social!.times!['not-sure'] || 0) + 1;
                      entry.social!.count = (entry.social!.count || 0) + 1;
+                     currentHabit = null; // Reset after logging
                 }
             }
         }
