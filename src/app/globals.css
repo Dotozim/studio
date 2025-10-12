@@ -95,62 +95,19 @@ body {
     width: 2.5rem;
   }
 
-  .day-bob:not(.day-fl)::after {
-    content: '';
-    position: absolute;
-    bottom: 4px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 6px;
-    height: 6px;
-    border-radius: 9999px;
-    background-color: hsl(var(--primary));
+  .day-bob:not(.day-fl) {
+    background-color: hsl(var(--primary) / 0.5);
   }
   
-  .day-fl:not(.day-bob)::after {
-    content: '';
-    position: absolute;
-    bottom: 4px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 6px;
-    height: 6px;
-    border-radius: 9999px;
-    background-color: hsl(var(--accent-foreground)); 
-  }
-  
-  .day-bob.day-fl::before {
-    content: '';
-    position: absolute;
-    bottom: 4px;
-    left: calc(50% - 4px);
-    transform: translateX(-50%);
-    width: 6px;
-    height: 6px;
-    border-radius: 9999px;
-    background-color: hsl(var(--primary));
-  }
-  .day-bob.day-fl::after {
-    content: '';
-    position: absolute;
-    bottom: 4px;
-    right: calc(50% - 4px);
-    transform: translateX(50%);
-    width: 6px;
-    height: 6px;
-    border-radius: 9999px;
-    background-color: hsl(var(--accent-foreground));
+  .day-fl:not(.day-bob) {
+    background-color: hsl(var(--accent) / 0.8);
   }
 
-  .day-social::after {
-    content: '';
-    position: absolute;
-    bottom: 4px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 6px;
-    height: 6px;
-    border-radius: 9999px;
-    background-color: hsl(var(--secondary-foreground));
+  .day-bob.day-fl {
+    background: linear-gradient(to bottom right, hsl(var(--primary) / 0.5) 0%, hsl(var(--primary) / 0.5) 50%, hsl(var(--accent) / 0.8) 50%, hsl(var(--accent) / 0.8) 100%);
+  }
+
+  .day-social {
+    background-color: hsl(var(--secondary));
   }
 }
