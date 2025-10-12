@@ -104,12 +104,8 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
             let nextPart = j + 1 < parts.length ? parts[j+1] : null;
             const partUpper = part.toUpperCase();
             
-            if (part === '1') {
-                part = 'BOB';
-            }
-
-            if (validHabits.includes(partUpper as Habit)) {
-                currentHabit = partUpper as Habit;
+            if (part === '1' || partUpper === 'BOB' || partUpper === 'FL') {
+                currentHabit = (part === '1' ? 'BOB' : partUpper) as Habit;
                 const nextPartIsTime = nextPart && validTimes.includes(nextPart.toLowerCase() as TimeOfDay);
                 const nextPartIsQuantity = nextPart && nextPart.toLowerCase().startsWith('x');
 
