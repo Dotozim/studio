@@ -15,9 +15,10 @@ type HabitCalendarProps = Omit<UICalendarProps, 'mode' | 'onSelect' | 'selected'
   onDateSelect: (date: Date | undefined) => void;
   onMonthSelect?: (date: Date) => void;
   disableNav?: boolean;
+  showCaption?: boolean;
 };
 
-export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelect, disableNav, ...props }: HabitCalendarProps) {
+export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelect, disableNav, showCaption = true, ...props }: HabitCalendarProps) {
   const entries = useHabitStore((state) => state.entries);
 
   const habitDays = (habit: Habit) =>
@@ -63,6 +64,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelec
         IconLeft: () => <ChevronLeft className="h-4 w-4" />,
         IconRight: () => <ChevronRight className="h-4 w-4" />,
         Caption: ({ ...props }) => {
+          if (!showCaption) return null;
           return (
             <div className="flex justify-center pt-1 relative items-center">
               {!disableNav && (
