@@ -22,8 +22,18 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
     isSameMonth(new Date(entry.date), month)
   );
 
-  const bobCount = monthlyEntries.reduce((acc, e) => acc + (e.habits.BOB || 0), 0);
-  const flCount = monthlyEntries.reduce((acc, e) => acc + (e.habits.FL || 0), 0);
+  const countHabits = (habitName: "BOB" | "FL") => {
+    return monthlyEntries.reduce((acc, e) => {
+      const habitTimes = e.habits[habitName];
+      if (habitTimes) {
+        return acc + Object.values(habitTimes).reduce((sum, count) => sum + (count || 0), 0);
+      }
+      return acc;
+    }, 0);
+  }
+
+  const bobCount = countHabits("BOB");
+  const flCount = countHabits("FL");
   
   const partnerCounts = monthlyEntries.reduce((acc, entry) => {
     if (entry.partner && entry.partner.trim()) {
@@ -34,8 +44,7 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
   }, {} as Record<string, number>);
   
   const socialCount = Object.values(partnerCounts).reduce((sum, count) => sum + count, 0);
-  const totalHabits = bobCount + flCount;
-  const total = totalHabits + socialCount;
+  const total = bobCount + flCount + socialCount;
 
 
   return (
@@ -48,8 +57,8 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
       </CardHeader>
       <CardContent className="space-y-4 text-sm">
         <div className="flex justify-between items-center p-3 rounded-lg bg-primary/20">
-          <span className="font-medium text-foreground">BOB</span>
-          <span className="font-semibold text-foreground">{bobCount}</span>
+          <span className="font-medium text-primary-foreground">BOB</span>
+          <span className="font-semibold text-primary-foreground">{bobCount}</span>
         </div>
         <div className="flex justify-between items-center p-3 rounded-lg bg-accent/30">
           <span className="font-medium text-accent-foreground">FL</span>
@@ -62,8 +71,8 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
             <p className="font-medium text-muted-foreground pt-2">Socials</p>
             {Object.entries(partnerCounts).map(([name, count]) => (
               <div key={name} className="flex justify-between items-center p-3 rounded-lg bg-destructive/20">
-                <span className="font-medium text-foreground">{name}</span>
-                <span className="font-semibold text-foreground">{count}</span>
+                <span className="font-medium text-destructive-foreground">{name}</span>
+                <span className="font-semibold text-destructive-foreground">{count}</span>
               </div>
             ))}
           </>

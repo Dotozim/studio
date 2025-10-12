@@ -18,7 +18,10 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, disableNav =
 
   const habitDays = (habit: Habit) =>
     entries
-      .filter((entry) => entry.habits[habit] && entry.habits[habit]! > 0)
+      .filter((entry) => {
+        const habitTimes = entry.habits[habit];
+        return habitTimes && Object.values(habitTimes).some(count => count && count > 0);
+      })
       .map((entry) => {
         return parseISO(entry.date);
       });

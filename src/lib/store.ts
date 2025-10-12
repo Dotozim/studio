@@ -1,6 +1,6 @@
 "use client"
 import { create } from 'zustand';
-import type { Habit, HabitEntry } from './types';
+import type { HabitEntry, TimeOfDay } from './types';
 import { produce } from 'immer';
 
 interface HabitState {
@@ -9,18 +9,18 @@ interface HabitState {
 }
 
 const initialEntries: HabitEntry[] = [
-    { date: '2024-07-01', habits: { BOB: 1 }, partner: 'Alice' },
-    { date: '2024-07-03', habits: { FL: 1 } },
-    { date: '2024-07-04', habits: { BOB: 2, FL: 1 }, partner: 'Bob' },
-    { date: '2024-07-08', habits: { BOB: 1 }, partner: 'Alice' },
-    { date: '2024-07-10', habits: { FL: 1 } },
-    { date: '2024-07-12', habits: { BOB: 1 } },
-    { date: '2024-07-15', habits: { FL: 1 }, partner: 'Charlie' },
-    { date: '2024-07-16', habits: { BOB: 1, FL: 1 }, partner: 'Alice' },
-    { date: '2024-07-20', habits: { BOB: 1 } },
-    { date: '2024-07-22', habits: { FL: 1 } },
-    { date: '2024-07-25', habits: { BOB: 1 }, partner: 'Bob' },
-    { date: '2024-08-02', habits: { BOB: 1, FL: 2 }, partner: 'David' },
+    { date: '2024-07-01', habits: { BOB: { morning: 1 } }, partner: 'Alice' },
+    { date: '2024-07-03', habits: { FL: { afternoon: 1 } } },
+    { date: '2024-07-04', habits: { BOB: { morning: 2 }, FL: { night: 1 } }, partner: 'Bob' },
+    { date: '2024-07-08', habits: { BOB: { morning: 1 } }, partner: 'Alice' },
+    { date: '2024-07-10', habits: { FL: { dawn: 1 } } },
+    { date: '2024-07-12', habits: { BOB: { afternoon: 1 } } },
+    { date: '2024-07-15', habits: { FL: { morning: 1 } }, partner: 'Charlie' },
+    { date: '2024-07-16', habits: { BOB: { night: 1 }, FL: { afternoon: 1 } }, partner: 'Alice' },
+    { date: '2024-07-20', habits: { BOB: { morning: 1 } } },
+    { date: '2024-07-22', habits: { FL: { night: 1 } } },
+    { date: '2024-07-25', habits: { BOB: { dawn: 1 } }, partner: 'Bob' },
+    { date: '2024-08-02', habits: { BOB: { morning: 1 }, FL: { afternoon: 2 } }, partner: 'David' },
 ];
 
 
@@ -31,7 +31,9 @@ export const useHabitStore = create<HabitState>((set) => ({
       produce((state: HabitState) => {
         const index = state.entries.findIndex((e) => e.date === entry.date);
 
-        const hasHabits = Object.values(entry.habits).some(count => count && count > 0);
+        const hasHabits = Object.values(entry.habits).some(habitTimes => 
+            habitTimes && Object.values(habitTimes).some(count => count && count > 0)
+        );
         const hasPartner = entry.partner && entry.partner.trim() !== '';
 
         if (index !== -1) {
