@@ -119,12 +119,16 @@ export function HabitDialog({
               </FormDescription>
               {habits.map((habit) => (
                 <Collapsible key={habit.id} className="rounded-lg border p-4">
-                    <CollapsibleTrigger className="flex items-center justify-between w-full">
+                    <CollapsibleTrigger asChild>
+                      <div className="flex items-center justify-between w-full cursor-pointer">
                         <FormLabel className="text-base font-normal">{habit.label}</FormLabel>
-                        <Button type="button" variant="ghost" size="sm" className="w-9 p-0">
-                            <Plus className="h-4 w-4" />
-                            <span className="sr-only">Toggle</span>
+                        <Button type="button" variant="ghost" size="sm" className="w-9 p-0" asChild>
+                            <div>
+                                <Plus className="h-4 w-4" />
+                                <span className="sr-only">Toggle</span>
+                            </div>
                         </Button>
+                      </div>
                     </CollapsibleTrigger>
                     <CollapsibleContent className="space-y-4 pt-4">
                       <Separator />
