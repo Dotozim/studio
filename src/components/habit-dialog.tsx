@@ -93,6 +93,15 @@ export function HabitDialog({
     control: form.control,
     name: "social.partners",
   });
+  
+  const socialPartners = form.watch("social.partners");
+  const socialCount = form.watch("social.count");
+
+  React.useEffect(() => {
+    if (socialPartners && socialPartners.some(p => p.value.trim() !== '') && socialCount === 0) {
+      form.setValue("social.count", 1);
+    }
+  }, [socialPartners, socialCount, form]);
 
   React.useEffect(() => {
     if (isOpen) {
