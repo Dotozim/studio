@@ -30,8 +30,10 @@ export const useHabitStore = create<HabitState>((set) => ({
     set(
       produce((state: HabitState) => {
         const index = state.entries.findIndex((e) => e.date === entry.date);
+        const hasHabits = entry.habits && entry.habits.length > 0;
+        const hasPartner = entry.partner && entry.partner.trim() !== '';
 
-        if (entry.habits.length === 0 && (!entry.partner || entry.partner.trim() === '')) {
+        if (!hasHabits && !hasPartner) {
           // If no habits and no partner, remove the entry if it exists
           if (index !== -1) {
             state.entries.splice(index, 1);

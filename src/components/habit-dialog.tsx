@@ -34,11 +34,13 @@ const habits: { id: Habit; label: string }[] = [
 ];
 
 const formSchema = z.object({
-  habits: z.array(z.string()).refine((value) => value.some((item) => item), {
-    message: "You have to select at least one item.",
-  }),
+  habits: z.array(z.string()),
   partner: z.string().optional(),
+}).refine((data) => data.habits.length > 0 || (data.partner && data.partner.trim() !== ''), {
+  message: "You must select at least one habit or enter a partner.",
+  path: ["habits"], // assign error to habits field
 });
+
 
 type HabitDialogProps = {
   isOpen: boolean;
@@ -80,7 +82,7 @@ export function HabitDialog({
         <DialogHeader>
           <DialogTitle>Log Habits for {format(date, "MMMM d, yyyy")}</DialogTitle>
           <DialogDescription>
-            Select the habits you completed. Click save when you're done.
+            Select habits or add a partner. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
