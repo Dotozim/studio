@@ -46,35 +46,44 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
     }, { total: 0, byTime: {} as { [key in TimeOfDay]?: number }});
     return counts;
   }
+  
+  const socialCounts = monthlyEntries.reduce((acc, entry) => {
+    const socialTimes = entry.social?.times;
+    if (socialTimes) {
+      for (const time in socialTimes) {
+        const timeKey = time as TimeOfDay;
+        const count = socialTimes[timeKey] || 0;
+        acc.total += count;
+        acc.byTime[timeKey] = (acc.byTime[timeKey] || 0) + count;
+      }
+    }
+    return acc;
+  }, { total: 0, byTime: {} as { [key in TimeOfDay]?: number } });
 
   const bobCounts = countHabits("BOB");
   const flCounts = countHabits("FL");
   
-  const socialCount = monthlyEntries.reduce((acc, entry) => {
-    return acc + (entry.social?.count || 0);
-  }, 0);
-
   const partnerCounts = monthlyEntries.reduce((acc, entry) => {
     if (entry.social && entry.social.count > 0 && entry.social.partners) {
       entry.social.partners.forEach(partnerNameRaw => {
         const partnerName = partnerNameRaw.trim();
         if (partnerName) {
-          acc[partnerName] = (acc[partnerName] || 0) + entry.social!.count;
+          acc[partnerName] = (acc[partnerName] || 0) + (entry.social?.count || 1);
         }
       });
     }
     return acc;
   }, {} as Record<string, number>);
   
-  const total = bobCounts.total + flCounts.total + socialCount;
+  const total = bobCounts.total + flCounts.total + socialCounts.total;
 
   const HabitSummary = ({ habit, counts, colorClass }: { habit: string, counts: { total: number, byTime: { [key in TimeOfDay]?: number } }, colorClass: string }) => (
-    <div className={`p-3 rounded-lg ${colorClass}`}>
+    <div className={`p-3 rounded-lg ${colorClass} text-card-foreground`}>
       <div className="flex justify-between items-center">
         <span className="font-medium">{habit}</span>
         <span className="font-semibold">{counts.total}</span>
       </div>
-      <div className="text-xs text-foreground/80 mt-1 space-y-0.5">
+      <div className="text-xs text-card-foreground/80 mt-1 space-y-0.5">
         {timesOfDay.map(time => (
             counts.byTime[time.id] ? (
                 <div key={time.id} className="flex justify-between">
@@ -96,22 +105,18 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
         <CardDescription>Your progress for the month.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 text-sm">
-        <HabitSummary habit="BOB" counts={bobCounts} colorClass="bg-primary/20 text-card-foreground" />
-        <HabitSummary habit="FL" counts={flCounts} colorClass="bg-accent/30 text-accent-foreground" />
-        
-        <div className="flex justify-between items-center p-3 rounded-lg bg-destructive/20">
-          <span className="font-medium text-card-foreground">Social</span>
-          <span className="font-semibold text-card-foreground">{socialCount}</span>
-        </div>
+        <HabitSummary habit="BOB" counts={bobCounts} colorClass="bg-primary/20" />
+        <HabitSummary habit="FL" counts={flCounts} colorClass="bg-accent/30" />
+        <HabitSummary habit="Social" counts={socialCounts} colorClass="bg-destructive/20" />
         
         {Object.keys(partnerCounts).length > 0 && (
           <>
             <Separator />
             <p className="font-medium text-muted-foreground pt-2">Partners</p>
             {Object.entries(partnerCounts).map(([name, count]) => (
-              <div key={name} className="flex justify-between items-center p-3 rounded-lg bg-destructive/10">
-                <span className="font-medium text-card-foreground">{name}</span>
-                <span className="font-semibold text-card-foreground">{count}</span>
+              <div key={name} className="flex justify-between items-center p-3 rounded-lg bg-destructive/10 text-card-foreground">
+                <span className="font-medium">{name}</span>
+                <span className="font-semibold">{count}</span>
               </div>
             ))}
           </>

@@ -9,5 +9,6 @@ export interface HabitEntry {
   social?: {
     partners?: string[];
     count: number;
+    times?: { [key in TimeOfDay]?: number };
   };
 }

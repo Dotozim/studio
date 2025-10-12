@@ -49,14 +49,17 @@ const formSchema = z.object({
   habits: z.record(z.string(), z.record(z.string(), z.number().optional()).optional()),
   social: z.object({
     partners: z.array(z.object({ value: z.string() })).optional(),
-    count: z.number().optional(),
+    times: z.record(z.string(), z.number().optional()).optional(),
   }).optional(),
 }).refine((data) => {
   const hasHabits = Object.values(data.habits).some(habitTimes => 
     habitTimes && Object.values(habitTimes).some(count => count && count > 0)
   );
-  const hasSocial = (data.social?.count ?? 0) > 0 || (data.social?.partners?.some(p => p.value.trim() !== ''));
-  return hasHabits || hasSocial;
+  const socialTimes = data.social?.times;
+  const hasSocialTime = socialTimes && Object.values(socialTimes).some(count => count && count > 0);
+  const hasSocialPartners = data.social?.partners?.some(p => p.value.trim() !== '');
+
+  return hasHabits || hasSocialTime || hasSocialPartners;
 }, {
   message: "You must log at least one habit or social interaction.",
   path: ["habits"],
@@ -83,8 +86,8 @@ export function HabitDialog({
     defaultValues: {
       habits: entry?.habits || {},
       social: { 
-        count: entry?.social?.count || 0,
         partners: entry?.social?.partners?.map(p => ({ value: p })) || [{ value: "" }],
+        times: entry?.social?.times || {},
       },
     },
   });
@@ -95,20 +98,26 @@ export function HabitDialog({
   });
   
   const socialPartners = form.watch("social.partners");
-  const socialCount = form.watch("social.count");
+  const socialTimes = form.watch("social.times");
 
   React.useEffect(() => {
-    if (socialPartners && socialPartners.some(p => p.value.trim() !== '') && (socialCount === 0 || socialCount === undefined)) {
-      form.setValue("social.count", 1, { shouldValidate: true });
+    const totalSocialCount = Object.values(socialTimes || {}).reduce((acc, count) => acc + (count || 0), 0);
+    if (socialPartners && socialPartners.some(p => p.value.trim() !== '') && totalSocialCount === 0) {
+        // If there's a partner but no time is logged, default 'not-sure' to 1
+        const currentNotSure = form.getValues("social.times.not-sure") || 0;
+        if (currentNotSure === 0) {
+            form.setValue("social.times.not-sure", 1, { shouldValidate: true });
+        }
     }
-  }, [socialPartners, socialCount, form]);
+  }, [socialPartners, socialTimes, form]);
+
 
   React.useEffect(() => {
     if (isOpen) {
       form.reset({
         habits: entry?.habits || {},
         social: {
-          count: entry?.social?.count || 0,
+          times: entry?.social?.times || {},
           partners: entry?.social?.partners?.map(p => ({ value: p }))?.length ? entry?.social?.partners?.map(p => ({ value: p })) : [{value: ''}],
         },
       });
@@ -117,17 +126,26 @@ export function HabitDialog({
 
 
   function onSubmit(values: z.infer<typeof formSchema>) {
+    const socialTimes = values.social?.times || {};
+    const socialCount = Object.values(socialTimes).reduce((acc, count) => acc + (count || 0), 0);
     const hasSocialPartners = values.social?.partners?.some(p => p.value.trim() !== '');
-    const socialCount = values.social?.count || 0;
 
     const newEntry: HabitEntry = {
       date: format(date, "yyyy-MM-dd"),
       habits: values.habits as HabitEntry['habits'],
       social: {
-        count: hasSocialPartners && socialCount === 0 ? 1 : socialCount,
+        count: socialCount,
         partners: values.social?.partners?.map(p => p.value).filter(p => p.trim() !== ''),
+        times: socialTimes,
       },
     };
+    
+    if (hasSocialPartners && newEntry.social && newEntry.social.count === 0) {
+        newEntry.social.count = 1;
+        if (!newEntry.social.times) newEntry.social.times = {};
+        newEntry.social.times['not-sure'] = (newEntry.social.times['not-sure'] || 0) + 1;
+    }
+
     setHabitEntry(newEntry);
     setIsOpen(false);
   }
@@ -217,37 +235,44 @@ export function HabitDialog({
                     </CollapsibleTrigger>
                     <CollapsibleContent className="space-y-4 pt-4">
                       <Separator />
-                        <FormField
-                            control={form.control}
-                            name="social.count"
-                            render={({ field }) => (
-                                <FormItem className="flex items-center justify-between p-2 rounded-lg">
-                                    <FormLabel className="text-sm font-normal">Count</FormLabel>
-                                    <div className="flex items-center gap-2">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="icon"
-                                        className="h-8 w-8"
-                                        onClick={() => field.onChange(Math.max(0, (field.value || 0) - 1))}
-                                    >
-                                        <Minus className="h-4 w-4" />
-                                    </Button>
-                                    <span className="w-8 text-center text-lg font-bold">{field.value || 0}</span>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="icon"
-                                        className="h-8 w-8"
-                                        onClick={() => field.onChange((field.value || 0) + 1)}
-                                    >
-                                        <Plus className="h-4 w-4" />
-                                    </Button>
-                                    </div>
-                                </FormItem>
-                            )}
-                        />
-                        <div className="space-y-2">
+                        {timesOfDay.map((time) => (
+                          <FormField
+                          key={time.id}
+                          control={form.control}
+                          name={`social.times.${time.id}`}
+                          render={({ field }) => (
+                              <FormItem className="flex items-center justify-between p-2 rounded-lg">
+                                <div className="flex items-center gap-2">
+                                  <time.icon className="h-4 w-4 text-muted-foreground" />
+                                  <FormLabel className="text-sm font-normal">{time.label}</FormLabel>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={() => field.onChange(Math.max(0, (field.value || 0) - 1))}
+                                  >
+                                      <Minus className="h-4 w-4" />
+                                  </Button>
+                                  <span className="w-8 text-center text-lg font-bold">{field.value || 0}</span>
+                                  <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={() => field.onChange((field.value || 0) + 1)}
+                                  >
+                                      <Plus className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </FormItem>
+                          )}
+                          />
+                        ))}
+                        <Separator/>
+                        <div className="space-y-2 p-2">
                           <FormLabel>Partners</FormLabel>
                           <FormDescription>
                               Who did you hang out with?
