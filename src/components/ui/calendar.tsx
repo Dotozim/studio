@@ -16,6 +16,7 @@ import {
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker> & {
   onCaptionClick?: () => void;
+  disableNav?: boolean;
 }
 
 function Calendar({
@@ -23,6 +24,7 @@ function Calendar({
   classNames,
   showOutsideDays = true,
   onCaptionClick,
+  disableNav,
   ...props
 }: CalendarProps) {
   return (
@@ -38,7 +40,8 @@ function Calendar({
         nav: "space-x-1 flex items-center",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
+          disableNav && "hidden"
         ),
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
@@ -68,8 +71,6 @@ function Calendar({
         IconLeft: ({ ...props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ...props }) => <ChevronRight className="h-4 w-4" />,
         Caption: ({ ...props }) => {
-          const { onMonthChange } = (props.components as any)?.DayPicker?.useDayPicker() || {};
-
           return (
             <div
               className={cn("flex justify-center pt-1 relative items-center", classNames?.caption)}

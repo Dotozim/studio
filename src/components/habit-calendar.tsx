@@ -5,7 +5,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { useHabitStore } from "@/lib/store";
 import type { Habit } from "@/lib/types";
 import { parseISO } from "date-fns";
-import { Button } from "./ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 type HabitCalendarProps = {
@@ -57,6 +56,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelec
       }}
       month={month}
       onMonthChange={onMonthChange}
+      disableNav={!!onMonthSelect}
       className="p-0"
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
