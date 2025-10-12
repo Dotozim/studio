@@ -22,10 +22,10 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect }: HabitCalen
         return parseISO(entry.date);
       });
 
-  const socialOnlyDays = entries
+  const socialDays = entries
     .filter(
       (entry) =>
-        entry.partner && entry.partner.trim() !== "" && entry.habits.length === 0
+        entry.partner && entry.partner.trim() !== ""
     )
     .map((entry) => {
       return parseISO(entry.date);
@@ -34,7 +34,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect }: HabitCalen
   const modifiers = {
     bob: habitDays("BOB"),
     fl: habitDays("FL"),
-    social: socialOnlyDays,
+    social: socialDays,
   };
 
   const modifiersClassNames = {

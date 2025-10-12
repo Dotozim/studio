@@ -95,19 +95,31 @@ body {
     width: 2.5rem;
   }
 
-  .day-bob:not(.day-fl) {
+  .day-bob:not(.day-fl):not(.day-social) {
     background-color: hsl(var(--primary) / 0.5);
   }
   
-  .day-fl:not(.day-bob) {
+  .day-fl:not(.day-bob):not(.day-social) {
     background-color: hsl(var(--accent) / 0.8);
   }
 
-  .day-bob.day-fl {
+  .day-social:not(.day-bob):not(.day-fl) {
+    background-color: hsl(var(--secondary));
+  }
+
+  .day-bob.day-fl:not(.day-social) {
     background: linear-gradient(to bottom right, hsl(var(--primary) / 0.5) 0%, hsl(var(--primary) / 0.5) 50%, hsl(var(--accent) / 0.8) 50%, hsl(var(--accent) / 0.8) 100%);
   }
 
-  .day-social {
-    background-color: hsl(var(--secondary));
+  .day-bob.day-social:not(.day-fl) {
+    background: linear-gradient(to bottom right, hsl(var(--primary) / 0.5) 0%, hsl(var(--primary) / 0.5) 50%, hsl(var(--secondary)) 50%, hsl(var(--secondary)) 100%);
+  }
+  
+  .day-fl.day-social:not(.day-bob) {
+     background: linear-gradient(to bottom right, hsl(var(--accent) / 0.8) 0%, hsl(var(--accent) / 0.8) 50%, hsl(var(--secondary)) 50%, hsl(var(--secondary)) 100%);
+  }
+
+  .day-bob.day-fl.day-social {
+    background: linear-gradient(to right, hsl(var(--primary) / 0.5) 33%, hsl(var(--accent) / 0.8) 33%, hsl(var(--accent) / 0.8) 66%, hsl(var(--secondary)) 66%);
   }
 }
