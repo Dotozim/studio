@@ -25,7 +25,6 @@ export function YearlyCalendar({ year, onDateSelect, onMonthSelect }: YearlyCale
               onDateSelect={onDateSelect}
               onMonthChange={() => {}} // No month change in year view
               onMonthSelect={onMonthSelect}
-              disableNav
             />
           </CardContent>
         </Card>
