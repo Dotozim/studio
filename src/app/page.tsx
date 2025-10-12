@@ -62,21 +62,24 @@ export default function Home() {
       </header>
 
       {view === "month" ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-          <Card className="md:col-span-2 shadow-lg">
-            <CardContent className="p-2 sm:p-4">
-              <HabitCalendar
-                month={currentMonth}
-                onMonthChange={setCurrentMonth}
-                onDateSelect={handleDateSelect}
-                onMonthSelect={() => setView('year')}
-              />
-            </CardContent>
-          </Card>
-          <div className="md:col-span-1">
-            <MonthlySummary month={currentMonth} />
+        <>
+          <h2 className="text-3xl font-bold text-center mb-8 font-headline">{currentYear}</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+            <Card className="md:col-span-2 shadow-lg">
+              <CardContent className="p-2 sm:p-4">
+                <HabitCalendar
+                  month={currentMonth}
+                  onMonthChange={setCurrentMonth}
+                  onDateSelect={handleDateSelect}
+                  onMonthSelect={() => setView('year')}
+                />
+              </CardContent>
+            </Card>
+            <div className="md:col-span-1">
+              <MonthlySummary month={currentMonth} />
+            </div>
           </div>
-        </div>
+        </>
       ) : (
         <YearlyCalendar year={currentYear} onDateSelect={handleDateSelect} onMonthSelect={handleMonthSelect} />
       )}

@@ -114,9 +114,9 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
     <Card className="shadow-lg">
       <CardHeader>
         <CardTitle className="font-headline text-2xl">
-          {format(month, "MMMM yyyy")} Summary
+          Month Summary
         </CardTitle>
-        <CardDescription>Your progress for the month.</CardDescription>
+        <CardDescription>Your progress for {format(month, "MMMM")}.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 text-sm">
         <HabitSummary habit="BOB" counts={bobCounts} colorClass="bg-primary/20" />
