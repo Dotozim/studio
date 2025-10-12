@@ -30,6 +30,7 @@ import type { Habit, HabitEntry, TimeOfDay } from "@/lib/types";
 import { Minus, Plus, Sun, Moon, Sunrise, Sunset, HelpCircle } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 import { Separator } from "./ui/separator";
+import { ScrollArea } from "./ui/scroll-area";
 
 const habits: { id: Habit; label: string }[] = [
   { id: "BOB", label: "BOB" },
@@ -112,86 +113,86 @@ export function HabitDialog({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <div className="space-y-4">
-              <FormLabel>Completed Habits</FormLabel>
-              <FormDescription>
-                Use the buttons to log how many times you completed each habit at different times of the day.
-              </FormDescription>
-              {habits.map((habit) => (
-                <Collapsible key={habit.id} className="rounded-lg border p-4">
-                    <CollapsibleTrigger asChild>
-                      <div className="flex items-center justify-between w-full cursor-pointer">
-                        <FormLabel className="text-base font-normal">{habit.label}</FormLabel>
-                        <Button type="button" variant="ghost" size="sm" className="w-9 p-0" asChild>
-                            <div>
-                                <Plus className="h-4 w-4" />
-                                <span className="sr-only">Toggle</span>
-                            </div>
-                        </Button>
-                      </div>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="space-y-4 pt-4">
-                      <Separator />
-                      {timesOfDay.map((time) => (
-                          <FormField
-                          key={time.id}
-                          control={form.control}
-                          name={`habits.${habit.id}.${time.id}`}
-                          render={({ field }) => (
-                              <FormItem className="flex items-center justify-between p-2 rounded-lg">
-                                <div className="flex items-center gap-2">
-                                  <time.icon className="h-4 w-4 text-muted-foreground" />
-                                  <FormLabel className="text-sm font-normal">{time.label}</FormLabel>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="icon"
-                                      className="h-8 w-8"
-                                      onClick={() => field.onChange(Math.max(0, (field.value || 0) - 1))}
-                                  >
-                                      <Minus className="h-4 w-4" />
-                                  </Button>
-                                  <span className="w-8 text-center text-lg font-bold">{field.value || 0}</span>
-                                  <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="icon"
-                                      className="h-8 w-8"
-                                      onClick={() => field.onChange((field.value || 0) + 1)}
-                                  >
-                                      <Plus className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </FormItem>
-                          )}
-                          />
-                      ))}
-                    </CollapsibleContent>
-                </Collapsible>
-              ))}
-               <FormMessage>{form.formState.errors.habits?.message}</FormMessage>
-            </div>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <ScrollArea className="max-h-[50vh] pr-4">
+              <div className="space-y-4">
+                <FormLabel>Completed Habits</FormLabel>
+                <FormDescription>
+                  Use the buttons to log how many times you completed each habit at different times of the day.
+                </FormDescription>
+                {habits.map((habit) => (
+                  <Collapsible key={habit.id} className="rounded-lg border p-4">
+                      <CollapsibleTrigger asChild>
+                        <div className="flex items-center justify-between w-full cursor-pointer">
+                          <FormLabel className="text-base font-normal">{habit.label}</FormLabel>
+                          <Button type="button" variant="ghost" size="sm" className="w-9 p-0">
+                              <Plus className="h-4 w-4" />
+                              <span className="sr-only">Toggle</span>
+                          </Button>
+                        </div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="space-y-4 pt-4">
+                        <Separator />
+                        {timesOfDay.map((time) => (
+                            <FormField
+                            key={time.id}
+                            control={form.control}
+                            name={`habits.${habit.id}.${time.id}`}
+                            render={({ field }) => (
+                                <FormItem className="flex items-center justify-between p-2 rounded-lg">
+                                  <div className="flex items-center gap-2">
+                                    <time.icon className="h-4 w-4 text-muted-foreground" />
+                                    <FormLabel className="text-sm font-normal">{time.label}</FormLabel>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        onClick={() => field.onChange(Math.max(0, (field.value || 0) - 1))}
+                                    >
+                                        <Minus className="h-4 w-4" />
+                                    </Button>
+                                    <span className="w-8 text-center text-lg font-bold">{field.value || 0}</span>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        onClick={() => field.onChange((field.value || 0) + 1)}
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </FormItem>
+                            )}
+                            />
+                        ))}
+                      </CollapsibleContent>
+                  </Collapsible>
+                ))}
+                 <FormMessage>{form.formState.errors.habits?.message}</FormMessage>
+              </div>
 
 
-            <FormField
-              control={form.control}
-              name="partner"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Partner</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Name of person (optional)" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Did someone join you? Add their name here.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="partner"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Partner</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Name of person (optional)" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      Did someone join you? Add their name here.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </ScrollArea>
             <DialogFooter>
               <Button type="submit">Save changes</Button>
             </DialogFooter>
