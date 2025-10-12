@@ -56,14 +56,14 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelec
       }}
       month={month}
       onMonthChange={onMonthChange}
-      disableNav={!!onMonthSelect}
+      onCaptionClick={onMonthSelect ? () => onMonthSelect(month) : undefined}
       className="p-0"
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4 w-full",
         caption: `flex justify-center pt-1 relative items-center ${onMonthSelect ? 'cursor-pointer hover:bg-accent rounded-md' : ''}`,
         caption_label: "text-lg font-medium font-headline",
-        nav: `space-x-1 flex items-center ${onMonthSelect ? 'hidden' : ''}`,
+        nav: `space-x-1 flex items-center`,
         nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
         table: "w-full border-collapse space-y-1",
         head_row: "flex justify-around",
@@ -76,7 +76,6 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelec
       }}
       modifiers={modifiers}
       modifiersClassNames={modifiersClassNames}
-      onCaptionClick={onMonthSelect ? () => onMonthSelect(month) : undefined}
       components={{
         IconLeft: () => <ChevronLeft className="h-4 w-4" />,
         IconRight: () => <ChevronRight className="h-4 w-4" />,
