@@ -48,11 +48,11 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
         <CardDescription>Your progress for the month.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 text-sm">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center p-3 rounded-lg shadow-[0_4px_10px_-4px_hsl(var(--primary))]">
           <span className="text-muted-foreground">BOB</span>
           <span className="font-semibold">{bobCount}</span>
         </div>
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center p-3 rounded-lg shadow-[0_4px_10px_-4px_hsl(var(--accent))]">
           <span className="text-muted-foreground">FL</span>
           <span className="font-semibold">{flCount}</span>
         </div>
@@ -62,7 +62,7 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
             <Separator />
             <p className="font-medium text-muted-foreground pt-2">Socials</p>
             {Object.entries(partnerCounts).map(([name, count]) => (
-              <div key={name} className="flex justify-between items-center">
+              <div key={name} className="flex justify-between items-center p-3 rounded-lg shadow-[0_4px_10px_-4px_hsl(var(--destructive))]">
                 <span className="text-muted-foreground">{name}</span>
                 <span className="font-semibold">{count}</span>
               </div>
