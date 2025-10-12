@@ -143,7 +143,10 @@ export function HabitDialog({
     if (hasSocialPartners && newEntry.social && newEntry.social.count === 0) {
         newEntry.social.count = 1;
         if (!newEntry.social.times) newEntry.social.times = {};
-        newEntry.social.times['not-sure'] = (newEntry.social.times['not-sure'] || 0) + 1;
+        const currentNotSure = newEntry.social.times['not-sure'] || 0;
+        if (currentNotSure === 0) {
+          newEntry.social.times['not-sure'] = 1;
+        }
     }
 
     setHabitEntry(newEntry);
