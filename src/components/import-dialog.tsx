@@ -86,12 +86,10 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
                   };
         }
         
-        let currentHabit: Habit | 'social' | null = null;
-        let lastPartWasHabitOrPartner = false;
+        const entry = entriesToUpdate[dateStr];
 
-        // If only date is present, it's a BOB entry
+        // Case: Only date is present, it's a BOB entry
         if (parts.length === 1) {
-            const entry = entriesToUpdate[dateStr];
             entry.habits.BOB = {
                 ...entry.habits.BOB,
                 'not-sure': (entry.habits.BOB?.['not-sure'] || 0) + 1,
@@ -99,16 +97,21 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
             continue; // Go to next line
         }
 
+        let currentHabit: Habit | 'social' | null = null;
+        
         for (let j = 1; j < parts.length; j++) {
-            const part = parts[j];
+            let part = parts[j];
             const partUpper = part.toUpperCase();
             
+            // Handle '1' as an alias for 'BOB'
+            if (part === '1') {
+                part = 'BOB';
+            }
+
             if (validHabits.includes(partUpper as Habit)) {
                 currentHabit = partUpper as Habit;
-                lastPartWasHabitOrPartner = true;
                 // If a habit is mentioned without quantity/time, log it as 1 'not-sure'
-                if (j === parts.length - 1 || !validTimes.includes(parts[j+1].toLowerCase() as TimeOfDay) && !parts[j+1].toLowerCase().startsWith('x')) {
-                    const entry = entriesToUpdate[dateStr];
+                if (j === parts.length - 1 || (!validTimes.includes(parts[j+1].toLowerCase() as TimeOfDay) && !parts[j+1].toLowerCase().startsWith('x'))) {
                     entry.habits[currentHabit] = {
                         ...entry.habits[currentHabit],
                         'not-sure': (entry.habits[currentHabit]?.['not-sure'] || 0) + 1,
@@ -117,7 +120,6 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
             } else if (validTimes.includes(part as TimeOfDay)) {
                 const time: TimeOfDay = part as TimeOfDay;
                 if (currentHabit) {
-                    const entry = entriesToUpdate[dateStr];
                     if (currentHabit === 'social') {
                         entry.social!.times![time] = (entry.social!.times![time] || 0) + 1;
                         entry.social!.count = (entry.social!.count || 0) + 1;
@@ -128,11 +130,9 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
                         };
                     }
                 }
-                lastPartWasHabitOrPartner = false;
             } else if (part.toLowerCase().startsWith('x') && !isNaN(parseInt(part.substring(1), 10))) {
                 const count = parseInt(part.substring(1), 10);
                 if (currentHabit) {
-                     const entry = entriesToUpdate[dateStr];
                      const time: TimeOfDay = (j + 1 < parts.length && validTimes.includes(parts[j+1] as TimeOfDay)) ? parts[j+1] as TimeOfDay : 'not-sure';
                      if (currentHabit === 'social') {
                          entry.social!.times![time] = (entry.social!.times![time] || 0) + count;
@@ -145,17 +145,14 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
                      }
                      if (time !== 'not-sure') j++; // Skip next part since it's used as time
                 }
-                lastPartWasHabitOrPartner = false;
             } else { // It's a partner name
                 currentHabit = 'social';
                 const partnerName = part;
-                const entry = entriesToUpdate[dateStr];
                 if (!entry.social!.partners!.includes(partnerName)) {
                     entry.social!.partners!.push(partnerName);
                 }
-                lastPartWasHabitOrPartner = true;
                 // If a partner is mentioned without quantity/time, log it as 1 'not-sure'
-                if (j === parts.length - 1 || !validTimes.includes(parts[j+1].toLowerCase() as TimeOfDay) && !parts[j+1].toLowerCase().startsWith('x')) {
+                if (j === parts.length - 1 || (!validTimes.includes(parts[j+1].toLowerCase() as TimeOfDay) && !parts[j+1].toLowerCase().startsWith('x'))) {
                      entry.social!.times!['not-sure'] = (entry.social!.times!['not-sure'] || 0) + 1;
                      entry.social!.count = (entry.social!.count || 0) + 1;
                 }
@@ -204,5 +201,3 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
     </Dialog>
   );
 }
-
-    
