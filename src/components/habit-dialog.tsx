@@ -105,7 +105,7 @@ export function HabitDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg grid-rows-[auto_minmax(0,1fr)_auto] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Log Habits for {format(date, "MMMM d, yyyy")}</DialogTitle>
           <DialogDescription>
@@ -113,8 +113,8 @@ export function HabitDialog({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <ScrollArea className="max-h-[50vh] pr-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 h-full flex flex-col">
+            <ScrollArea className="pr-4 flex-1">
               <div className="space-y-4">
                 <div>
                   <FormLabel>Completed Habits</FormLabel>
@@ -194,7 +194,7 @@ export function HabitDialog({
                 />
               </div>
             </ScrollArea>
-            <DialogFooter>
+            <DialogFooter className="pt-4">
               <Button type="submit">Save changes</Button>
             </DialogFooter>
           </form>
