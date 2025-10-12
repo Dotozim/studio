@@ -83,7 +83,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelec
                 role={onMonthSelect && !disableNav ? 'button' : 'heading'}
                 aria-live="polite"
               >
-                {format(props.displayMonth, "MMMM yyyy")}
+                {format(props.displayMonth, "MMMM")}
               </div>
               {!disableNav && (
                  <Button
