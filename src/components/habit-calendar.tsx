@@ -10,10 +10,11 @@ type HabitCalendarProps = {
   month: Date;
   onMonthChange: (date: Date) => void;
   onDateSelect: (date: Date | undefined) => void;
+  onMonthSelect?: (date: Date) => void;
   disableNav?: boolean;
 };
 
-export function HabitCalendar({ month, onMonthChange, onDateSelect, disableNav = false }: HabitCalendarProps) {
+export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelect, disableNav = false }: HabitCalendarProps) {
   const entries = useHabitStore((state) => state.entries);
 
   const habitDays = (habit: Habit) =>
@@ -59,7 +60,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, disableNav =
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4 w-full",
-        caption: "flex justify-center pt-1 relative items-center",
+        caption: `flex justify-center pt-1 relative items-center ${onMonthSelect ? 'cursor-pointer hover:bg-accent rounded-md' : ''}`,
         caption_label: "text-lg font-medium font-headline",
         nav: "space-x-1 flex items-center",
         nav_button: disableNav ? "hidden" : "",
@@ -74,6 +75,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, disableNav =
       }}
       modifiers={modifiers}
       modifiersClassNames={modifiersClassNames}
+      onCaptionClick={onMonthSelect ? () => onMonthSelect(month) : undefined}
     />
   );
 }

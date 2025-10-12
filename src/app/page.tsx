@@ -26,6 +26,11 @@ export default function Home() {
     }
   };
 
+  const handleMonthSelect = (month: Date) => {
+    setCurrentMonth(month);
+    setView("month");
+  };
+
   const selectedEntry = selectedDate
     ? allEntries.find(
         (entry) => entry.date === format(selectedDate, "yyyy-MM-dd")
@@ -72,7 +77,7 @@ export default function Home() {
           </div>
         </div>
       ) : (
-        <YearlyCalendar year={currentYear} onDateSelect={handleDateSelect} />
+        <YearlyCalendar year={currentYear} onDateSelect={handleDateSelect} onMonthSelect={handleMonthSelect} />
       )}
 
       {selectedDate && (

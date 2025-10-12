@@ -8,9 +8,10 @@ import { Card, CardContent } from "./ui/card";
 type YearlyCalendarProps = {
   year: number;
   onDateSelect: (date: Date | undefined) => void;
+  onMonthSelect: (date: Date) => void;
 };
 
-export function YearlyCalendar({ year, onDateSelect }: YearlyCalendarProps) {
+export function YearlyCalendar({ year, onDateSelect, onMonthSelect }: YearlyCalendarProps) {
   const yearStart = startOfYear(new Date(year, 0, 1));
   const months = Array.from({ length: 12 }).map((_, i) => addMonths(yearStart, i));
 
@@ -23,6 +24,7 @@ export function YearlyCalendar({ year, onDateSelect }: YearlyCalendarProps) {
               month={month}
               onDateSelect={onDateSelect}
               onMonthChange={() => {}} // No month change in year view
+              onMonthSelect={onMonthSelect}
               disableNav
             />
           </CardContent>
