@@ -37,11 +37,10 @@ function Calendar({
         caption: "flex justify-center pt-1 relative items-center",
         caption_label: "text-sm font-medium",
         caption_dropdowns: "flex justify-center gap-1",
-        nav: "space-x-1 flex items-center",
+        nav: cn("space-x-1 flex items-center", { "hidden": disableNav }),
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
-          disableNav && "hidden"
+          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
         ),
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
@@ -60,7 +59,7 @@ function Calendar({
           "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
         day_today: "bg-secondary text-secondary-foreground",
         day_outside:
-          "day-outside text-muted-foreground aria-selected:bg-accent/50 aria-selected:text-muted-foreground",
+          "day-outside text-muted-foreground opacity-50",
         day_disabled: "text-muted-foreground opacity-50",
         day_range_middle:
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
@@ -71,6 +70,11 @@ function Calendar({
         IconLeft: ({ ...props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ...props }) => <ChevronRight className="h-4 w-4" />,
         Caption: ({ ...props }) => {
+          if (disableNav) {
+            // In year view, we render the caption in YearlyCalendar, so we can return null here to avoid duplication
+            // and have a cleaner structure.
+            return null;
+          }
           return (
             <div
               className={cn("flex justify-center pt-1 relative items-center", classNames?.caption)}

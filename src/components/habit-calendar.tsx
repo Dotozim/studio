@@ -1,20 +1,21 @@
 "use client";
 
 import * as React from "react";
-import { Calendar } from "@/components/ui/calendar";
+import { Calendar as UICalendar, CalendarProps as UICalendarProps } from "@/components/ui/calendar";
 import { useHabitStore } from "@/lib/store";
 import type { Habit } from "@/lib/types";
 import { parseISO } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-type HabitCalendarProps = {
+type HabitCalendarProps = Omit<UICalendarProps, 'mode' | 'onSelect' | 'selected'> & {
   month: Date;
   onMonthChange: (date: Date) => void;
   onDateSelect: (date: Date | undefined) => void;
   onMonthSelect?: (date: Date) => void;
+  disableNav?: boolean;
 };
 
-export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelect }: HabitCalendarProps) {
+export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelect, disableNav, ...props }: HabitCalendarProps) {
   const entries = useHabitStore((state) => state.entries);
 
   const habitDays = (habit: Habit) =>
@@ -49,7 +50,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelec
   };
   
   return (
-    <Calendar
+    <UICalendar
       mode="single"
       onSelect={(day) => {
         onDateSelect(day);
@@ -57,14 +58,15 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelec
       month={month}
       onMonthChange={onMonthChange}
       onCaptionClick={onMonthSelect ? () => onMonthSelect(month) : undefined}
+      disableNav={disableNav}
       className="p-0"
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4 w-full",
         caption: `flex justify-center pt-1 relative items-center ${onMonthSelect ? 'cursor-pointer hover:bg-accent rounded-md' : ''}`,
         caption_label: "text-lg font-medium font-headline",
-        nav: `space-x-1 flex items-center`,
-        nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
+        nav: `space-x-1 flex items-center ${disableNav ? 'hidden' : ''}`,
+        nav_button: `h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100`,
         table: "w-full border-collapse space-y-1",
         head_row: "flex justify-around",
         head_cell: "text-muted-foreground rounded-md w-9 font-normal text-sm",
@@ -80,6 +82,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelec
         IconLeft: () => <ChevronLeft className="h-4 w-4" />,
         IconRight: () => <ChevronRight className="h-4 w-4" />,
       }}
+      {...props}
     />
   );
 }
