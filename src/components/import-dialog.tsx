@@ -27,6 +27,7 @@ const validTimes: TimeOfDay[] = ["dawn", "morning", "afternoon", "night"];
 export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
   const [importData, setImportData] = useState("");
   const setHabitEntry = useHabitStore((state) => state.setHabitEntry);
+  const allEntries = useHabitStore((state) => state.entries);
   const { toast } = useToast();
 
   const handleImport = () => {
@@ -55,9 +56,8 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
       const line = lines[i].trim();
       if (line === "") continue;
 
-      const lineParts = line.split(' ');
+      const lineParts = line.split(' ').map(p => p.toLowerCase());
       const datePart = lineParts[0];
-      const timePart = lineParts.length > 1 ? lineParts[1].toLowerCase() : "not-sure";
       
       const dateSegments = datePart.split('/');
       if (dateSegments.length !== 2) continue;
@@ -69,17 +69,34 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
         continue;
       }
 
-      const timeOfDay: TimeOfDay = validTimes.includes(timePart as TimeOfDay) ? timePart as TimeOfDay : "not-sure";
+      let timeOfDay: TimeOfDay = "not-sure";
+      let count = 1;
+
+      for (let j = 1; j < lineParts.length; j++) {
+        const part = lineParts[j];
+        if (validTimes.includes(part as TimeOfDay)) {
+          timeOfDay = part as TimeOfDay;
+        } else if (part.startsWith('x') && !isNaN(parseInt(part.substring(1), 10))) {
+          count = parseInt(part.substring(1), 10);
+        }
+      }
       
       const monthStr = month.toString().padStart(2, '0');
       const dayStr = day.toString().padStart(2, '0');
       const dateStr = `${year}-${monthStr}-${dayStr}`;
 
+      const existingEntry = allEntries.find(e => e.date === dateStr);
+
       const newEntry: HabitEntry = {
         date: dateStr,
         habits: {
-          BOB: { [timeOfDay]: 1 },
+          ...existingEntry?.habits,
+          BOB: {
+            ...existingEntry?.habits?.BOB,
+            [timeOfDay]: (existingEntry?.habits?.BOB?.[timeOfDay] || 0) + count,
+          },
         },
+        social: existingEntry?.social
       };
 
       setHabitEntry(newEntry);
@@ -101,14 +118,14 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
         <DialogHeader>
           <DialogTitle>Import Data</DialogTitle>
           <DialogDescription>
-            Paste your data below. Format: Year, then DD/MM [time] on new lines.
+            Paste your data below. Format: Year, then DD/MM [time] [xCount] on new lines.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
             <Label htmlFor="import-data">Data</Label>
             <Textarea
                 id="import-data"
-                placeholder="2024&#10;01/07 morning&#10;03/07&#10;..."
+                placeholder="2024\n01/07 morning\n03/07 x2\n..."
                 value={importData}
                 onChange={(e) => setImportData(e.target.value)}
                 className="min-h-[200px]"
