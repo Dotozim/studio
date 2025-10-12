@@ -4,7 +4,7 @@ import * as React from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { useHabitStore } from "@/lib/store";
 import type { Habit } from "@/lib/types";
-import { addDays } from "date-fns";
+import { parseISO } from "date-fns";
 
 type HabitCalendarProps = {
   month: Date;
@@ -18,14 +18,14 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect }: HabitCalen
   const habitDays = (habit: Habit) =>
     entries
       .filter((entry) => entry.habits.includes(habit))
-      .map((entry) => addDays(new Date(entry.date), 1)); // Adjust for timezone issues
+      .map((entry) => parseISO(entry.date)); 
 
   const socialOnlyDays = entries
     .filter(
       (entry) =>
         entry.partner && entry.partner.trim() !== "" && entry.habits.length === 0
     )
-    .map((entry) => addDays(new Date(entry.date), 1));
+    .map((entry) => parseISO(entry.date));
 
   const modifiers = {
     bob: habitDays("BOB"),

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { addDays, format, startOfMonth } from "date-fns";
+import { format, startOfMonth } from "date-fns";
 import { HabitCalendar } from "@/components/habit-calendar";
 import { HabitDialog } from "@/components/habit-dialog";
 import { MonthlySummary } from "@/components/monthly-summary";
@@ -18,9 +18,7 @@ export default function Home() {
 
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
-      // date-fns and react-day-picker have timezone issues, this is a common workaround
-      const adjustedDate = addDays(date, 1);
-      setSelectedDate(adjustedDate);
+      setSelectedDate(date);
       setIsDialogOpen(true);
     }
   };
