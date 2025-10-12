@@ -77,6 +77,17 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
   
   const total = bobCounts.total + flCounts.total + socialCounts.total;
 
+  const totalCountsByTime = timesOfDay.reduce((acc, time) => {
+    const timeId = time.id as TimeOfDay;
+    const timeTotal = (bobCounts.byTime[timeId] || 0) + 
+                      (flCounts.byTime[timeId] || 0) + 
+                      (socialCounts.byTime[timeId] || 0);
+    if (timeTotal > 0) {
+      acc[timeId] = timeTotal;
+    }
+    return acc;
+  }, {} as { [key in TimeOfDay]?: number });
+
   const HabitSummary = ({ habit, counts, colorClass }: { habit: string, counts: { total: number, byTime: { [key in TimeOfDay]?: number } }, colorClass: string }) => (
     <div className={`p-3 rounded-lg ${colorClass} text-card-foreground`}>
       <div className="flex justify-between items-center">
@@ -126,6 +137,16 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
         <div className="flex justify-between items-center font-bold text-base">
           <span>TOTAL</span>
           <span>{total}</span>
+        </div>
+        <div className="text-xs text-muted-foreground/80 space-y-0.5">
+            {timesOfDay.map(time => (
+                totalCountsByTime[time.id] ? (
+                    <div key={time.id} className="flex justify-between pl-2">
+                        <span>{time.label}</span>
+                        <span>{totalCountsByTime[time.id]}</span>
+                    </div>
+                ) : null
+            ))}
         </div>
       </CardContent>
     </Card>
