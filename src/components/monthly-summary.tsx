@@ -24,6 +24,9 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
 
   const bobCount = monthlyEntries.filter((e) => e.habits.includes("BOB")).length;
   const flCount = monthlyEntries.filter((e) => e.habits.includes("FL")).length;
+  const socialCount = monthlyEntries.filter(
+    (e) => e.partner && e.partner.trim() !== ""
+  ).length;
 
   const partnerCounts = monthlyEntries.reduce((acc, entry) => {
     if (entry.partner && entry.partner.trim()) {
@@ -33,9 +36,7 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
     return acc;
   }, {} as Record<string, number>);
   
-  const socialOnlyDays = monthlyEntries.filter(e => e.partner && e.partner.trim() && e.habits.length === 0).length;
-
-  const total = bobCount + flCount + socialOnlyDays;
+  const total = bobCount + flCount + socialCount;
 
   return (
     <Card className="shadow-lg">
