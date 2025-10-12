@@ -40,9 +40,16 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
   }, 0);
 
   const partnerCounts = monthlyEntries.reduce((acc, entry) => {
-    if (entry.social && entry.social.count > 0 && entry.social.partner && entry.social.partner.trim()) {
-      const partnerName = entry.social.partner.trim();
-      acc[partnerName] = (acc[partnerName] || 0) + entry.social.count;
+    if (entry.social && entry.social.count > 0 && entry.social.partners) {
+      entry.social.partners.forEach(partnerNameRaw => {
+        const partnerName = partnerNameRaw.trim();
+        if (partnerName) {
+          // We assume each interaction involves all partners listed, so we add the count to each.
+          // If the logic should be different (e.g., count is per partner), this needs adjustment.
+          // For now, let's say if count is 2 and partners are A and B, A gets 2 and B gets 2.
+          acc[partnerName] = (acc[partnerName] || 0) + entry.social!.count;
+        }
+      });
     }
     return acc;
   }, {} as Record<string, number>);

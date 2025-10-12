@@ -9,18 +9,18 @@ interface HabitState {
 }
 
 const initialEntries: HabitEntry[] = [
-    { date: '2024-07-01', habits: { BOB: { morning: 1 } }, social: { partner: 'Alice', count: 1 } },
+    { date: '2024-07-01', habits: { BOB: { morning: 1 } }, social: { partners: ['Alice'], count: 1 } },
     { date: '2024-07-03', habits: { FL: { afternoon: 1 } } },
-    { date: '2024-07-04', habits: { BOB: { morning: 2 }, FL: { night: 1 } }, social: { partner: 'Bob', count: 1 } },
-    { date: '2024-07-08', habits: { BOB: { morning: 1 } }, social: { partner: 'Alice', count: 1 } },
+    { date: '2024-07-04', habits: { BOB: { morning: 2 }, FL: { night: 1 } }, social: { partners: ['Bob'], count: 1 } },
+    { date: '2024-07-08', habits: { BOB: { morning: 1 } }, social: { partners: ['Alice'], count: 1 } },
     { date: '2024-07-10', habits: { FL: { dawn: 1 } } },
     { date: '2024-07-12', habits: { BOB: { afternoon: 1 } } },
-    { date: '2024-07-15', habits: { FL: { morning: 1 } }, social: { partner: 'Charlie', count: 1 } },
-    { date: '2024-07-16', habits: { BOB: { night: 1 }, FL: { afternoon: 1 } }, social: { partner: 'Alice', count: 1 } },
+    { date: '2024-07-15', habits: { FL: { morning: 1 } }, social: { partners: ['Charlie'], count: 1 } },
+    { date: '2024-07-16', habits: { BOB: { night: 1 }, FL: { afternoon: 1 } }, social: { partners: ['Alice'], count: 1 } },
     { date: '2024-07-20', habits: { BOB: { morning: 1 } } },
     { date: '2024-07-22', habits: { FL: { night: 1 } } },
-    { date: '2024-07-25', habits: { BOB: { dawn: 1 } }, social: { partner: 'Bob', count: 1 } },
-    { date: '2024-08-02', habits: { BOB: { morning: 1 }, FL: { afternoon: 2 } }, social: { partner: 'David', count: 1 } },
+    { date: '2024-07-25', habits: { BOB: { dawn: 1 } }, social: { partners: ['Bob'], count: 1 } },
+    { date: '2024-08-02', habits: { BOB: { morning: 1 }, FL: { afternoon: 2 } }, social: { partners: ['David'], count: 1 } },
 ];
 
 
@@ -42,7 +42,7 @@ export const useHabitStore = create<HabitState>((set) => ({
           state.entries[index].social = entry.social;
 
           if (!hasHabits && !hasSocial) {
-            // If no habits and no partner, remove the entry
+            // If no habits and no social, remove the entry
             state.entries.splice(index, 1);
           }
         } else {

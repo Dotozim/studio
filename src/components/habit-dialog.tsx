@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import * as z from "zod";
 import React from "react";
 
@@ -27,7 +27,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useHabitStore } from "@/lib/store";
 import type { Habit, HabitEntry, TimeOfDay } from "@/lib/types";
-import { Minus, Plus, Sun, Moon, Sunrise, Sunset, HelpCircle, Users } from "lucide-react";
+import { Minus, Plus, Sun, Moon, Sunrise, Sunset, HelpCircle, Users, Trash2 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 import { Separator } from "./ui/separator";
 import { ScrollArea } from "./ui/scroll-area";
@@ -48,7 +48,7 @@ const timesOfDay: { id: TimeOfDay; label: string; icon: React.ElementType }[] = 
 const formSchema = z.object({
   habits: z.record(z.string(), z.record(z.string(), z.number().optional()).optional()),
   social: z.object({
-    partner: z.string().optional(),
+    partners: z.array(z.object({ value: z.string() })).optional(),
     count: z.number().optional(),
   }).optional(),
 }).refine((data) => {
@@ -82,15 +82,26 @@ export function HabitDialog({
     resolver: zodResolver(formSchema),
     defaultValues: {
       habits: entry?.habits || {},
-      social: entry?.social || { count: 0, partner: '' },
+      social: { 
+        count: entry?.social?.count || 0,
+        partners: entry?.social?.partners?.map(p => ({ value: p })) || [{ value: "" }],
+      },
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "social.partners",
   });
 
   React.useEffect(() => {
     if (isOpen) {
       form.reset({
         habits: entry?.habits || {},
-        social: entry?.social || { count: 0, partner: '' },
+        social: {
+          count: entry?.social?.count || 0,
+          partners: entry?.social?.partners?.map(p => ({ value: p }))?.length ? entry?.social?.partners?.map(p => ({ value: p })) : [{value: ''}],
+        },
       });
     }
   }, [isOpen, entry, form]);
@@ -100,7 +111,10 @@ export function HabitDialog({
     const newEntry: HabitEntry = {
       date: format(date, "yyyy-MM-dd"),
       habits: values.habits as HabitEntry['habits'],
-      social: values.social,
+      social: {
+        count: values.social?.count || 0,
+        partners: values.social?.partners?.map(p => p.value).filter(p => p.trim() !== ''),
+      },
     };
     setHabitEntry(newEntry);
     setIsOpen(false);
@@ -221,22 +235,48 @@ export function HabitDialog({
                                 </FormItem>
                             )}
                         />
-                        <FormField
-                            control={form.control}
-                            name="social.partner"
-                            render={({ field }) => (
+                        <div className="space-y-2">
+                          <FormLabel>Partners</FormLabel>
+                          <FormDescription>
+                              Who did you hang out with?
+                          </FormDescription>
+                          {fields.map((field, index) => (
+                            <FormField
+                              key={field.id}
+                              control={form.control}
+                              name={`social.partners.${index}.value`}
+                              render={({ field }) => (
                                 <FormItem>
-                                <FormLabel>Partner</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="Name of person (optional)" {...field} />
-                                </FormControl>
-                                <FormDescription>
-                                    Did someone join you? Add their name here.
-                                </FormDescription>
-                                <FormMessage />
+                                  <div className="flex items-center gap-2">
+                                    <FormControl>
+                                      <Input placeholder="Name of person" {...field} />
+                                    </FormControl>
+                                    {fields.length > 1 && (
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => remove(index)}
+                                    >
+                                      <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                    )}
+                                  </div>
+                                  <FormMessage />
                                 </FormItem>
-                            )}
-                        />
+                              )}
+                            />
+                          ))}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => append({ value: "" })}
+                          >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add Partner
+                          </Button>
+                        </div>
                     </CollapsibleContent>
                 </Collapsible>
               </div>
