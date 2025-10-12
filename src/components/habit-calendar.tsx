@@ -4,7 +4,7 @@ import * as React from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { useHabitStore } from "@/lib/store";
 import type { Habit } from "@/lib/types";
-import { parseISO, add, set } from "date-fns";
+import { parseISO, set } from "date-fns";
 
 type HabitCalendarProps = {
   month: Date;
@@ -19,10 +19,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect }: HabitCalen
     entries
       .filter((entry) => entry.habits.includes(habit))
       .map((entry) => {
-        // The selected date is at midnight UTC, which can cause it to be off by one day.
-        const date = parseISO(entry.date)
-        const userTimezoneOffset = date.getTimezoneOffset() * 60 * 1000;
-        return new Date(date.getTime() + userTimezoneOffset);
+        return parseISO(entry.date);
       });
 
   const socialOnlyDays = entries
@@ -31,9 +28,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect }: HabitCalen
         entry.partner && entry.partner.trim() !== "" && entry.habits.length === 0
     )
     .map((entry) => {
-      const date = parseISO(entry.date)
-      const userTimezoneOffset = date.getTimezoneOffset() * 60 * 1000;
-      return new Date(date.getTime() + userTimezoneOffset);
+      return parseISO(entry.date);
     });
 
   const modifiers = {
@@ -52,12 +47,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect }: HabitCalen
     <Calendar
       mode="single"
       onSelect={(day) => {
-        if (!day) {
-            onDateSelect(undefined);
-            return;
-        }
-        const correctedDate = set(day, { hours: 0, minutes: 0, seconds: 0, milliseconds: 0 });
-        onDateSelect(correctedDate);
+        onDateSelect(day);
       }}
       month={month}
       onMonthChange={onMonthChange}

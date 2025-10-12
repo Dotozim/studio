@@ -33,9 +33,9 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
     return acc;
   }, {} as Record<string, number>);
   
-  const socialDays = monthlyEntries.filter(e => e.partner && e.partner.trim() && e.habits.length === 0).length;
+  const socialDays = monthlyEntries.filter(e => e.partner && e.partner.trim() && e.habits.length > 0).length;
 
-  const total = bobCount + flCount + socialDays;
+  const total = bobCount + flCount;
 
   return (
     <Card className="shadow-lg">
