@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import React from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -65,6 +66,16 @@ export function HabitDialog({
     },
   });
 
+  React.useEffect(() => {
+    if (isOpen) {
+      form.reset({
+        habits: entry?.habits || [],
+        partner: entry?.partner || "",
+      });
+    }
+  }, [isOpen, entry, form]);
+
+
   function onSubmit(values: z.infer<typeof formSchema>) {
     const newEntry: HabitEntry = {
       date: format(date, "yyyy-MM-dd"),
@@ -73,7 +84,6 @@ export function HabitDialog({
     };
     setHabitEntry(newEntry);
     setIsOpen(false);
-    form.reset();
   }
 
   return (
