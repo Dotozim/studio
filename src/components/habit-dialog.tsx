@@ -116,10 +116,12 @@ export function HabitDialog({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <ScrollArea className="max-h-[50vh] pr-4">
               <div className="space-y-4">
-                <FormLabel>Completed Habits</FormLabel>
-                <FormDescription>
-                  Use the buttons to log how many times you completed each habit at different times of the day.
-                </FormDescription>
+                <div>
+                  <FormLabel>Completed Habits</FormLabel>
+                  <FormDescription>
+                    Use the buttons to log how many times you completed each habit at different times of the day.
+                  </FormDescription>
+                </div>
                 {habits.map((habit) => (
                   <Collapsible key={habit.id} className="rounded-lg border p-4">
                       <CollapsibleTrigger asChild>
@@ -173,25 +175,24 @@ export function HabitDialog({
                   </Collapsible>
                 ))}
                  <FormMessage>{form.formState.errors.habits?.message}</FormMessage>
+              
+                <FormField
+                  control={form.control}
+                  name="partner"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Partner</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Name of person (optional)" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Did someone join you? Add their name here.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-
-
-              <FormField
-                control={form.control}
-                name="partner"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Partner</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Name of person (optional)" {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      Did someone join you? Add their name here.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </ScrollArea>
             <DialogFooter>
               <Button type="submit">Save changes</Button>
