@@ -30,19 +30,25 @@ export const useHabitStore = create<HabitState>((set) => ({
     set(
       produce((state: HabitState) => {
         const index = state.entries.findIndex((e) => e.date === entry.date);
-        const hasHabits = entry.habits && entry.habits.length > 0;
-        const hasPartner = entry.partner && entry.partner.trim() !== '';
+        
+        if (index !== -1) {
+          // Entry exists, update it
+          state.entries[index].habits = entry.habits;
+          state.entries[index].partner = entry.partner;
 
-        if (!hasHabits && !hasPartner) {
-          // If no habits and no partner, remove the entry if it exists
-          if (index !== -1) {
+          const hasHabits = entry.habits && entry.habits.length > 0;
+          const hasPartner = entry.partner && entry.partner.trim() !== '';
+
+          if (!hasHabits && !hasPartner) {
+            // If no habits and no partner, remove the entry
             state.entries.splice(index, 1);
           }
         } else {
-          // Add or update the entry
-          if (index !== -1) {
-            state.entries[index] = entry;
-          } else {
+          // No entry exists, create a new one if it has data
+          const hasHabits = entry.habits && entry.habits.length > 0;
+          const hasPartner = entry.partner && entry.partner.trim() !== '';
+
+          if (hasHabits || hasPartner) {
             state.entries.push(entry);
           }
         }
