@@ -66,10 +66,10 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, disableNav =
         row: "flex w-full mt-2 justify-around",
         day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 rounded-md",
         day_selected:"bg-primary/20 text-primary-foreground hover:bg-primary/30",
+        day_outside: "text-muted-foreground opacity-50 invisible",
       }}
       modifiers={modifiers}
       modifiersClassNames={modifiersClassNames}
-      showOutsideDays
     />
   );
 }
