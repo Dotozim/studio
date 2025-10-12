@@ -3,7 +3,7 @@
 import * as React from "react";
 import { addMonths, startOfYear, format } from "date-fns";
 import { HabitCalendar } from "./habit-calendar";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Card, CardContent } from "./ui/card";
 
 type YearlyCalendarProps = {
   year: number;
@@ -21,14 +21,12 @@ export function YearlyCalendar({ year, onDateSelect, onMonthSelect }: YearlyCale
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {months.map((month) => (
           <Card key={month.toString()} className="shadow-lg">
-            <CardHeader className="p-2 pb-0">
-               <CardTitle 
-                  className="text-lg font-medium font-headline text-center cursor-pointer hover:bg-accent rounded-md p-1"
-                  onClick={() => onMonthSelect(month)}
-                >
-                  {format(month, "MMMM")}
-                </CardTitle>
-            </CardHeader>
+            <div
+              className="text-lg font-medium font-headline text-center cursor-pointer hover:bg-accent rounded-md p-2"
+              onClick={() => onMonthSelect(month)}
+            >
+              {format(month, "MMMM")}
+            </div>
             <CardContent className="p-2">
               <HabitCalendar
                 month={month}

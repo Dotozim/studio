@@ -4,9 +4,10 @@ import * as React from "react";
 import { Calendar as UICalendar, CalendarProps as UICalendarProps } from "@/components/ui/calendar";
 import { useHabitStore } from "@/lib/store";
 import type { Habit } from "@/lib/types";
-import { parseISO, format } from "date-fns";
+import { parseISO, format, addMonths, subMonths } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "./ui/button";
 
 type HabitCalendarProps = Omit<UICalendarProps, 'mode' | 'onSelect' | 'selected'> & {
   month: Date;
@@ -49,7 +50,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelec
     fl: "day-fl",
     social: "day-social",
   };
-  
+
   return (
     <UICalendar
       mode="single"
@@ -58,22 +59,38 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelec
       }}
       month={month}
       onMonthChange={onMonthChange}
-      captionLayout={disableNav ? "dropdown" : "buttons"}
       components={{
         IconLeft: () => <ChevronLeft className="h-4 w-4" />,
         IconRight: () => <ChevronRight className="h-4 w-4" />,
         Caption: ({ ...props }) => {
-          if (disableNav) {
-            return null;
-          }
           return (
-            <div
-              className={cn("flex justify-center pt-1 relative items-center", !disableNav && onMonthSelect ? 'cursor-pointer hover:bg-accent rounded-md' : '')}
-              onClick={!disableNav && onMonthSelect ? () => onMonthSelect(month) : undefined}
-              role={!disableNav && onMonthSelect ? 'button' : 'heading'}
-              aria-live="polite"
-            >
-              <h2 className="text-lg font-medium font-headline">{format(props.displayMonth, "MMMM yyyy")}</h2>
+            <div className="flex justify-center pt-1 relative items-center">
+              {!disableNav && (
+                <Button
+                  variant="outline"
+                  className="h-7 w-7 p-0 absolute left-1"
+                  onClick={() => onMonthChange(subMonths(month, 1))}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+              )}
+              <div
+                className={cn("text-lg font-medium font-headline", onMonthSelect && !disableNav ? "cursor-pointer hover:bg-accent rounded-md px-2" : "")}
+                onClick={onMonthSelect && !disableNav ? () => onMonthSelect(month) : undefined}
+                role={onMonthSelect && !disableNav ? 'button' : 'heading'}
+                aria-live="polite"
+              >
+                {format(props.displayMonth, "MMMM yyyy")}
+              </div>
+              {!disableNav && (
+                 <Button
+                  variant="outline"
+                  className="h-7 w-7 p-0 absolute right-1"
+                  onClick={() => onMonthChange(addMonths(month, 1))}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           );
         },
@@ -82,9 +99,8 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelec
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4 w-full",
-        caption: `flex justify-center pt-1 relative items-center`,
-        caption_label: "text-lg font-medium font-headline",
-        nav: `space-x-1 flex items-center ${disableNav ? 'hidden' : ''}`,
+        caption: "flex justify-center pt-1 relative items-center",
+        nav: "space-x-1 flex items-center",
         nav_button: `h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100`,
         table: "w-full border-collapse space-y-1",
         head_row: "flex justify-around",
