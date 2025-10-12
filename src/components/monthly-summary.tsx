@@ -24,10 +24,7 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
 
   const bobCount = monthlyEntries.filter((e) => e.habits.includes("BOB")).length;
   const flCount = monthlyEntries.filter((e) => e.habits.includes("FL")).length;
-  const socialCount = monthlyEntries.filter(
-    (e) => e.partner && e.partner.trim() !== ""
-  ).length;
-
+  
   const partnerCounts = monthlyEntries.reduce((acc, entry) => {
     if (entry.partner && entry.partner.trim()) {
       const partnerName = entry.partner.trim();
@@ -36,8 +33,10 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
     return acc;
   }, {} as Record<string, number>);
   
+  const socialCount = Object.values(partnerCounts).reduce((sum, count) => sum + count, 0);
   const totalHabits = monthlyEntries.reduce((acc, entry) => acc + entry.habits.length, 0);
   const total = totalHabits + socialCount;
+
 
   return (
     <Card className="shadow-lg">
@@ -48,13 +47,13 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
         <CardDescription>Your progress for the month.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 text-sm">
-        <div className="flex justify-between items-center p-3 rounded-lg shadow-[0_4px_10px_-4px_hsl(var(--primary))]">
-          <span className="text-muted-foreground">BOB</span>
-          <span className="font-semibold">{bobCount}</span>
+        <div className="flex justify-between items-center p-3 rounded-lg bg-primary/20">
+          <span className="text-primary-foreground font-medium">BOB</span>
+          <span className="font-semibold text-primary-foreground">{bobCount}</span>
         </div>
-        <div className="flex justify-between items-center p-3 rounded-lg shadow-[0_4px_10px_-4px_hsl(var(--accent))]">
-          <span className="text-muted-foreground">FL</span>
-          <span className="font-semibold">{flCount}</span>
+        <div className="flex justify-between items-center p-3 rounded-lg bg-accent/30">
+          <span className="text-accent-foreground font-medium">FL</span>
+          <span className="font-semibold text-accent-foreground">{flCount}</span>
         </div>
         
         {Object.keys(partnerCounts).length > 0 && (
@@ -62,9 +61,9 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
             <Separator />
             <p className="font-medium text-muted-foreground pt-2">Socials</p>
             {Object.entries(partnerCounts).map(([name, count]) => (
-              <div key={name} className="flex justify-between items-center p-3 rounded-lg shadow-[0_4px_10px_-4px_hsl(var(--destructive))]">
-                <span className="text-muted-foreground">{name}</span>
-                <span className="font-semibold">{count}</span>
+              <div key={name} className="flex justify-between items-center p-3 rounded-lg bg-destructive/20">
+                <span className="text-destructive-foreground font-medium">{name}</span>
+                <span className="font-semibold text-destructive-foreground">{count}</span>
               </div>
             ))}
           </>
