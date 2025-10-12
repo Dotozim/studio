@@ -27,7 +27,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useHabitStore } from "@/lib/store";
 import type { Habit, HabitEntry, TimeOfDay } from "@/lib/types";
-import { Minus, Plus, Sun, Moon, Sunrise, Sunset } from "lucide-react";
+import { Minus, Plus, Sun, Moon, Sunrise, Sunset, HelpCircle } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 import { Separator } from "./ui/separator";
 
@@ -41,6 +41,7 @@ const timesOfDay: { id: TimeOfDay; label: string; icon: React.ElementType }[] = 
   { id: "morning", label: "Morning", icon: Sun },
   { id: "afternoon", label: "Afternoon", icon: Sunset },
   { id: "night", label: "Night", icon: Moon },
+  { id: "not-sure", label: "Not Sure", icon: HelpCircle },
 ];
 
 const formSchema = z.object({
