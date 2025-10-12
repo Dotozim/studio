@@ -71,7 +71,7 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
       const newEntry: HabitEntry = {
         date: dateStr,
         habits: {
-          BOB: { morning: 1 },
+          BOB: { "not-sure": 1 },
         },
       };
 
