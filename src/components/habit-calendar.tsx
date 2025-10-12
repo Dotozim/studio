@@ -20,14 +20,23 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect }: HabitCalen
       .filter((entry) => entry.habits.includes(habit))
       .map((entry) => addDays(new Date(entry.date), 1)); // Adjust for timezone issues
 
+  const socialOnlyDays = entries
+    .filter(
+      (entry) =>
+        entry.partner && entry.partner.trim() !== "" && entry.habits.length === 0
+    )
+    .map((entry) => addDays(new Date(entry.date), 1));
+
   const modifiers = {
     bob: habitDays("BOB"),
     fl: habitDays("FL"),
+    social: socialOnlyDays,
   };
 
   const modifiersClassNames = {
     bob: "day-bob",
     fl: "day-fl",
+    social: "day-social",
   };
   
   return (
