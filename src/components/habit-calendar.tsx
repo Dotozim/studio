@@ -63,7 +63,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelec
         caption: `flex justify-center pt-1 relative items-center ${onMonthSelect ? 'cursor-pointer hover:bg-accent rounded-md' : ''}`,
         caption_label: "text-lg font-medium font-headline",
         nav: "space-x-1 flex items-center",
-        nav_button: disableNav ? "hidden" : "",
+        nav_button: "",
         table: "w-full border-collapse space-y-1",
         head_row: "flex justify-around",
         head_cell: "text-muted-foreground rounded-md w-9 font-normal text-sm",
