@@ -13,9 +13,10 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useHabitStore } from "@/lib/store";
-import type { HabitEntry, TimeOfDay } from "@/lib/types";
+import type { HabitEntry, TimeOfDay, Habit } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "./ui/label";
+import { produce } from "immer";
 
 type ImportDialogProps = {
   isOpen: boolean;
@@ -23,6 +24,7 @@ type ImportDialogProps = {
 };
 
 const validTimes: TimeOfDay[] = ["dawn", "morning", "afternoon", "night"];
+const validHabits: Habit[] = ["BOB", "FL"];
 
 export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
   const [importData, setImportData] = useState("");
@@ -50,67 +52,131 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
         });
         return;
     }
-
-    let importedCount = 0;
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (line === "") continue;
-
-      const lineParts = line.split(' ').map(p => p.toLowerCase());
-      const datePart = lineParts[0];
-      
-      const dateSegments = datePart.split('/');
-      if (dateSegments.length !== 2) continue;
-
-      const day = parseInt(dateSegments[0], 10);
-      const month = parseInt(dateSegments[1], 10);
-
-      if (isNaN(day) || isNaN(month) || day < 1 || day > 31 || month < 1 || month > 12) {
-        continue;
-      }
-
-      let timeOfDay: TimeOfDay = "not-sure";
-      let count = 1;
-
-      for (let j = 1; j < lineParts.length; j++) {
-        const part = lineParts[j];
-        if (validTimes.includes(part as TimeOfDay)) {
-          timeOfDay = part as TimeOfDay;
-        } else if (part.startsWith('x') && !isNaN(parseInt(part.substring(1), 10))) {
-          count = parseInt(part.substring(1), 10);
-        }
-      }
-      
-      const monthStr = month.toString().padStart(2, '0');
-      const dayStr = day.toString().padStart(2, '0');
-      const dateStr = `${year}-${monthStr}-${dayStr}`;
-
-      const existingEntry = allEntries.find(e => e.date === dateStr);
-
-      const newEntry: HabitEntry = {
-        date: dateStr,
-        habits: {
-          ...existingEntry?.habits,
-          BOB: {
-            ...existingEntry?.habits?.BOB,
-            [timeOfDay]: (existingEntry?.habits?.BOB?.[timeOfDay] || 0) + count,
-          },
-        },
-        social: existingEntry?.social
-      };
-
-      setHabitEntry(newEntry);
-      importedCount++;
-    }
     
+    let importedCount = 0;
+    const entriesToUpdate: { [date: string]: HabitEntry } = {};
+
+    for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line === "") continue;
+
+        const parts = line.split(/\s+/).map(p => p.trim());
+        const datePart = parts[0];
+        
+        const dateSegments = datePart.split('/');
+        if (dateSegments.length !== 2) continue;
+
+        const day = parseInt(dateSegments[0], 10);
+        const month = parseInt(dateSegments[1], 10);
+
+        if (isNaN(day) || isNaN(month) || day < 1 || day > 31 || month < 1 || month > 12) {
+            continue;
+        }
+
+        const dateStr = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+
+        if (!entriesToUpdate[dateStr]) {
+            const existingEntry = allEntries.find(e => e.date === dateStr);
+            entriesToUpdate[dateStr] = existingEntry 
+                ? produce(existingEntry, draft => {}) // Deep copy
+                : {
+                    date: dateStr,
+                    habits: {},
+                    social: { partners: [], count: 0, times: {} },
+                  };
+        }
+        
+        let currentHabit: Habit | 'social' | null = null;
+        let lastPartWasHabitOrPartner = false;
+
+        // If only date is present, it's a BOB entry
+        if (parts.length === 1) {
+            const entry = entriesToUpdate[dateStr];
+            entry.habits.BOB = {
+                ...entry.habits.BOB,
+                'not-sure': (entry.habits.BOB?.['not-sure'] || 0) + 1,
+            };
+            continue; // Go to next line
+        }
+
+        for (let j = 1; j < parts.length; j++) {
+            const part = parts[j];
+            const partUpper = part.toUpperCase();
+            
+            if (validHabits.includes(partUpper as Habit)) {
+                currentHabit = partUpper as Habit;
+                lastPartWasHabitOrPartner = true;
+                // If a habit is mentioned without quantity/time, log it as 1 'not-sure'
+                if (j === parts.length - 1 || !validTimes.includes(parts[j+1].toLowerCase() as TimeOfDay) && !parts[j+1].toLowerCase().startsWith('x')) {
+                    const entry = entriesToUpdate[dateStr];
+                    entry.habits[currentHabit] = {
+                        ...entry.habits[currentHabit],
+                        'not-sure': (entry.habits[currentHabit]?.['not-sure'] || 0) + 1,
+                    };
+                }
+            } else if (validTimes.includes(part as TimeOfDay)) {
+                const time: TimeOfDay = part as TimeOfDay;
+                if (currentHabit) {
+                    const entry = entriesToUpdate[dateStr];
+                    if (currentHabit === 'social') {
+                        entry.social!.times![time] = (entry.social!.times![time] || 0) + 1;
+                        entry.social!.count = (entry.social!.count || 0) + 1;
+                    } else {
+                        entry.habits[currentHabit] = {
+                            ...entry.habits[currentHabit],
+                            [time]: (entry.habits[currentHabit]?.[time] || 0) + 1,
+                        };
+                    }
+                }
+                lastPartWasHabitOrPartner = false;
+            } else if (part.toLowerCase().startsWith('x') && !isNaN(parseInt(part.substring(1), 10))) {
+                const count = parseInt(part.substring(1), 10);
+                if (currentHabit) {
+                     const entry = entriesToUpdate[dateStr];
+                     const time: TimeOfDay = (j + 1 < parts.length && validTimes.includes(parts[j+1] as TimeOfDay)) ? parts[j+1] as TimeOfDay : 'not-sure';
+                     if (currentHabit === 'social') {
+                         entry.social!.times![time] = (entry.social!.times![time] || 0) + count;
+                         entry.social!.count = (entry.social!.count || 0) + count;
+                     } else {
+                         entry.habits[currentHabit] = {
+                            ...entry.habits[currentHabit],
+                            [time]: (entry.habits[currentHabit]?.[time] || 0) + count,
+                        };
+                     }
+                     if (time !== 'not-sure') j++; // Skip next part since it's used as time
+                }
+                lastPartWasHabitOrPartner = false;
+            } else { // It's a partner name
+                currentHabit = 'social';
+                const partnerName = part;
+                const entry = entriesToUpdate[dateStr];
+                if (!entry.social!.partners!.includes(partnerName)) {
+                    entry.social!.partners!.push(partnerName);
+                }
+                lastPartWasHabitOrPartner = true;
+                // If a partner is mentioned without quantity/time, log it as 1 'not-sure'
+                if (j === parts.length - 1 || !validTimes.includes(parts[j+1].toLowerCase() as TimeOfDay) && !parts[j+1].toLowerCase().startsWith('x')) {
+                     entry.social!.times!['not-sure'] = (entry.social!.times!['not-sure'] || 0) + 1;
+                     entry.social!.count = (entry.social!.count || 0) + 1;
+                }
+            }
+        }
+    }
+
+    Object.values(entriesToUpdate).forEach(entry => {
+        setHabitEntry(entry);
+        importedCount++;
+    });
+
     toast({
         title: "Import Successful",
-        description: `Successfully imported ${importedCount} entries.`,
+        description: `Successfully imported or updated ${importedCount} dates.`,
     });
 
     setImportData("");
     setIsOpen(false);
   };
+
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -118,14 +184,14 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
         <DialogHeader>
           <DialogTitle>Import Data</DialogTitle>
           <DialogDescription>
-            Paste your data below. Format: Year, then DD/MM [time] [xCount] on new lines.
+            Paste your data below. Format: Year, then DD/MM [HABIT/Partner] [time] [xCount] on new lines.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
             <Label htmlFor="import-data">Data</Label>
             <Textarea
                 id="import-data"
-                placeholder="2024\n01/07 morning\n03/07 x2\n..."
+                placeholder="2024\n01/07 BOB morning\n03/07 FL x2\n05/07 Alice night..."
                 value={importData}
                 onChange={(e) => setImportData(e.target.value)}
                 className="min-h-[200px]"
@@ -138,3 +204,5 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
     </Dialog>
   );
 }
+
+    
