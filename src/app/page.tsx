@@ -69,6 +69,7 @@ export default function Home() {
                 month={currentMonth}
                 onMonthChange={setCurrentMonth}
                 onDateSelect={handleDateSelect}
+                onMonthSelect={() => setView('year')}
               />
             </CardContent>
           </Card>

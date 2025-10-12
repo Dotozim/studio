@@ -3,6 +3,7 @@
 import * as React from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { DayPicker, DropdownProps } from "react-day-picker"
+import { format } from "date-fns"
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
@@ -75,6 +76,7 @@ function Calendar({
             // and have a cleaner structure.
             return null;
           }
+          const captionContent = format(props.displayMonth, "MMMM yyyy");
           return (
             <div
               className={cn("flex justify-center pt-1 relative items-center", classNames?.caption)}
@@ -82,7 +84,7 @@ function Calendar({
               role={onCaptionClick ? 'button' : 'heading'}
               aria-live="polite"
             >
-              <h2 className={classNames?.caption_label}>{props.displayMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}</h2>
+              <h2 className={classNames?.caption_label}>{captionContent}</h2>
             </div>
           );
         },
