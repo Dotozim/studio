@@ -33,7 +33,7 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
     return acc;
   }, {} as Record<string, number>);
   
-  const socialCount = Object.values(partnerCounts).reduce((sum, count) => sum + count, 0);
+  const socialCount = monthlyEntries.filter(entry => entry.partner && entry.partner.trim() !== '').length;
   const totalHabits = monthlyEntries.reduce((acc, entry) => acc + entry.habits.length, 0);
   const total = totalHabits + socialCount;
 
@@ -48,11 +48,11 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
       </CardHeader>
       <CardContent className="space-y-4 text-sm">
         <div className="flex justify-between items-center p-3 rounded-lg bg-primary/20">
-          <span className="text-primary-foreground font-medium">BOB</span>
-          <span className="font-semibold text-primary-foreground">{bobCount}</span>
+          <span className="font-medium text-foreground">BOB</span>
+          <span className="font-semibold text-foreground">{bobCount}</span>
         </div>
         <div className="flex justify-between items-center p-3 rounded-lg bg-accent/30">
-          <span className="text-accent-foreground font-medium">FL</span>
+          <span className="font-medium text-accent-foreground">FL</span>
           <span className="font-semibold text-accent-foreground">{flCount}</span>
         </div>
         
@@ -62,8 +62,8 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
             <p className="font-medium text-muted-foreground pt-2">Socials</p>
             {Object.entries(partnerCounts).map(([name, count]) => (
               <div key={name} className="flex justify-between items-center p-3 rounded-lg bg-destructive/20">
-                <span className="text-destructive-foreground font-medium">{name}</span>
-                <span className="font-semibold text-destructive-foreground">{count}</span>
+                <span className="font-medium text-foreground">{name}</span>
+                <span className="font-semibold text-foreground">{count}</span>
               </div>
             ))}
           </>
