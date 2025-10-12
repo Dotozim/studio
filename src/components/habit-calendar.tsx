@@ -4,15 +4,16 @@ import * as React from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { useHabitStore } from "@/lib/store";
 import type { Habit } from "@/lib/types";
-import { parseISO, set } from "date-fns";
+import { parseISO } from "date-fns";
 
 type HabitCalendarProps = {
   month: Date;
   onMonthChange: (date: Date) => void;
   onDateSelect: (date: Date | undefined) => void;
+  disableNav?: boolean;
 };
 
-export function HabitCalendar({ month, onMonthChange, onDateSelect }: HabitCalendarProps) {
+export function HabitCalendar({ month, onMonthChange, onDateSelect, disableNav = false }: HabitCalendarProps) {
   const entries = useHabitStore((state) => state.entries);
 
   const habitDays = (habit: Habit) =>
@@ -58,6 +59,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect }: HabitCalen
         caption: "flex justify-center pt-1 relative items-center",
         caption_label: "text-lg font-medium font-headline",
         nav: "space-x-1 flex items-center",
+        nav_button: disableNav ? "hidden" : "",
         table: "w-full border-collapse space-y-1",
         head_row: "flex justify-around",
         head_cell: "text-muted-foreground rounded-md w-9 font-normal text-sm",

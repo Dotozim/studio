@@ -1,18 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { format, startOfMonth } from "date-fns";
+import { format, startOfMonth, getYear } from "date-fns";
 import { HabitCalendar } from "@/components/habit-calendar";
 import { HabitDialog } from "@/components/habit-dialog";
 import { MonthlySummary } from "@/components/monthly-summary";
+import { YearlyCalendar } from "@/components/yearly-calendar";
 import { useHabitStore } from "@/lib/store";
-import type { HabitEntry } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Calendar, ChevronsRightLeft } from "lucide-react";
 
 export default function Home() {
   const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()));
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [view, setView] = useState<"month" | "year">("month");
 
   const allEntries = useHabitStore((state) => state.entries);
 
@@ -28,6 +31,8 @@ export default function Home() {
         (entry) => entry.date === format(selectedDate, "yyyy-MM-dd")
       )
     : undefined;
+    
+  const currentYear = getYear(currentMonth);
 
   return (
     <main className="container mx-auto p-4 sm:p-6 md:p-8">
@@ -35,24 +40,41 @@ export default function Home() {
         <h1 className="font-headline text-4xl font-bold text-primary sm:text-5xl">
           HabitCal
         </h1>
-        <p className="text-muted-foreground mt-2">
-          Track your habits. One day at a time.
-        </p>
-      </header>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-        <Card className="md:col-span-2 shadow-lg">
-          <CardContent className="p-2 sm:p-4">
-            <HabitCalendar
-              month={currentMonth}
-              onMonthChange={setCurrentMonth}
-              onDateSelect={handleDateSelect}
-            />
-          </CardContent>
-        </Card>
-        <div className="md:col-span-1">
-          <MonthlySummary month={currentMonth} />
+        <div className="flex items-center justify-center gap-4">
+          <p className="text-muted-foreground mt-2">
+            Track your habits. One day at a time.
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setView(view === "month" ? "year" : "month")}
+            className="mt-2"
+          >
+            {view === "month" ? <Calendar/> : <ChevronsRightLeft/>}
+            <span className="ml-2">{view === "month" ? "Year View" : "Month View"}</span>
+          </Button>
         </div>
-      </div>
+      </header>
+
+      {view === "month" ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+          <Card className="md:col-span-2 shadow-lg">
+            <CardContent className="p-2 sm:p-4">
+              <HabitCalendar
+                month={currentMonth}
+                onMonthChange={setCurrentMonth}
+                onDateSelect={handleDateSelect}
+              />
+            </CardContent>
+          </Card>
+          <div className="md:col-span-1">
+            <MonthlySummary month={currentMonth} />
+          </div>
+        </div>
+      ) : (
+        <YearlyCalendar year={currentYear} onDateSelect={handleDateSelect} />
+      )}
+
       {selectedDate && (
         <HabitDialog
           isOpen={isDialogOpen}
