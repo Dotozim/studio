@@ -55,7 +55,7 @@ const formSchema = z.object({
   const hasHabits = Object.values(data.habits).some(habitTimes => 
     habitTimes && Object.values(habitTimes).some(count => count && count > 0)
   );
-  const hasSocial = (data.social && data.social.count && data.social.count > 0) || (data.social?.partners?.some(p => p.value.trim() !== ''));
+  const hasSocial = (data.social?.count ?? 0) > 0 || (data.social?.partners?.some(p => p.value.trim() !== ''));
   return hasHabits || hasSocial;
 }, {
   message: "You must log at least one habit or social interaction.",
@@ -98,7 +98,7 @@ export function HabitDialog({
   const socialCount = form.watch("social.count");
 
   React.useEffect(() => {
-    if (socialPartners && socialPartners.some(p => p.value.trim() !== '') && socialCount === 0) {
+    if (socialPartners && socialPartners.some(p => p.value.trim() !== '') && (socialCount === 0 || socialCount === undefined)) {
       form.setValue("social.count", 1, { shouldValidate: true });
     }
   }, [socialPartners, socialCount, form]);
@@ -117,11 +117,14 @@ export function HabitDialog({
 
 
   function onSubmit(values: z.infer<typeof formSchema>) {
+    const hasSocialPartners = values.social?.partners?.some(p => p.value.trim() !== '');
+    const socialCount = values.social?.count || 0;
+
     const newEntry: HabitEntry = {
       date: format(date, "yyyy-MM-dd"),
       habits: values.habits as HabitEntry['habits'],
       social: {
-        count: values.social?.count || 0,
+        count: hasSocialPartners && socialCount === 0 ? 1 : socialCount,
         partners: values.social?.partners?.map(p => p.value).filter(p => p.trim() !== ''),
       },
     };
