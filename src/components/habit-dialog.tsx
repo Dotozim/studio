@@ -127,27 +127,27 @@ export function HabitDialog({
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     const socialTimes = values.social?.times || {};
-    const socialCount = Object.values(socialTimes).reduce((acc, count) => acc + (count || 0), 0);
-    const hasSocialPartners = values.social?.partners?.some(p => p.value.trim() !== '');
+    let socialCount = Object.values(socialTimes).reduce((acc, count) => acc + (count || 0), 0);
+    
+    const validPartners = values.social?.partners?.map(p => p.value).filter(p => p.trim() !== '') || [];
+    const hasSocialPartners = validPartners.length > 0;
+
+    if (hasSocialPartners && socialCount === 0) {
+      socialCount = 1;
+      if(!socialTimes['not-sure']) {
+        socialTimes['not-sure'] = 1;
+      }
+    }
 
     const newEntry: HabitEntry = {
       date: format(date, "yyyy-MM-dd"),
       habits: values.habits as HabitEntry['habits'],
       social: {
         count: socialCount,
-        partners: values.social?.partners?.map(p => p.value).filter(p => p.trim() !== ''),
+        partners: validPartners,
         times: socialTimes,
       },
     };
-    
-    if (hasSocialPartners && newEntry.social && newEntry.social.count === 0) {
-        newEntry.social.count = 1;
-        if (!newEntry.social.times) newEntry.social.times = {};
-        const currentNotSure = newEntry.social.times['not-sure'] || 0;
-        if (currentNotSure === 0) {
-          newEntry.social.times['not-sure'] = 1;
-        }
-    }
 
     setHabitEntry(newEntry);
     setIsOpen(false);

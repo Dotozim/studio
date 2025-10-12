@@ -21,7 +21,6 @@ const timesOfDay: { id: TimeOfDay; label: string }[] = [
     { id: "morning", label: "Morning" },
     { id: "afternoon", label: "Afternoon" },
     { id: "night", label: "Night" },
-    { id: "not-sure", label: "Not Sure" },
 ];
 
 export function MonthlySummary({ month }: MonthlySummaryProps) {
@@ -39,7 +38,9 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
             const timeKey = time as TimeOfDay;
             const count = habitTimes[timeKey] || 0;
             acc.total += count;
-            acc.byTime[timeKey] = (acc.byTime[timeKey] || 0) + count;
+            if (timeKey !== 'not-sure') {
+                acc.byTime[timeKey] = (acc.byTime[timeKey] || 0) + count;
+            }
         }
       }
       return acc;
@@ -54,7 +55,9 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
         const timeKey = time as TimeOfDay;
         const count = socialTimes[timeKey] || 0;
         acc.total += count;
-        acc.byTime[timeKey] = (acc.byTime[timeKey] || 0) + count;
+        if (timeKey !== 'not-sure') {
+            acc.byTime[timeKey] = (acc.byTime[timeKey] || 0) + count;
+        }
       }
     }
     return acc;
