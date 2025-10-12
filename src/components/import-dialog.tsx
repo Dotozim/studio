@@ -98,20 +98,24 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
         }
 
         let currentHabit: Habit | 'social' | null = null;
+        let currentPartner: string | null = null;
         
         for (let j = 1; j < parts.length; j++) {
             let part = parts[j];
+            let nextPart = j + 1 < parts.length ? parts[j+1] : null;
             const partUpper = part.toUpperCase();
             
-            // Handle '1' as an alias for 'BOB'
             if (part === '1') {
                 part = 'BOB';
             }
 
             if (validHabits.includes(partUpper as Habit)) {
                 currentHabit = partUpper as Habit;
-                // If a habit is mentioned without quantity/time, log it as 1 'not-sure'
-                if (j === parts.length - 1 || (!validTimes.includes(parts[j+1].toLowerCase() as TimeOfDay) && !parts[j+1].toLowerCase().startsWith('x'))) {
+                currentPartner = null;
+                const nextPartIsTime = nextPart && validTimes.includes(nextPart.toLowerCase() as TimeOfDay);
+                const nextPartIsQuantity = nextPart && nextPart.toLowerCase().startsWith('x');
+
+                if (!nextPart || (!nextPartIsTime && !nextPartIsQuantity)) {
                     entry.habits[currentHabit] = {
                         ...entry.habits[currentHabit],
                         'not-sure': (entry.habits[currentHabit]?.['not-sure'] || 0) + 1,
@@ -120,7 +124,7 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
             } else if (validTimes.includes(part as TimeOfDay)) {
                 const time: TimeOfDay = part as TimeOfDay;
                 if (currentHabit) {
-                    if (currentHabit === 'social') {
+                     if (currentPartner) {
                         entry.social!.times![time] = (entry.social!.times![time] || 0) + 1;
                         entry.social!.count = (entry.social!.count || 0) + 1;
                     } else {
@@ -133,8 +137,8 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
             } else if (part.toLowerCase().startsWith('x') && !isNaN(parseInt(part.substring(1), 10))) {
                 const count = parseInt(part.substring(1), 10);
                 if (currentHabit) {
-                     const time: TimeOfDay = (j + 1 < parts.length && validTimes.includes(parts[j+1] as TimeOfDay)) ? parts[j+1] as TimeOfDay : 'not-sure';
-                     if (currentHabit === 'social') {
+                     const time: TimeOfDay = (nextPart && validTimes.includes(nextPart as TimeOfDay)) ? nextPart as TimeOfDay : 'not-sure';
+                     if (currentPartner) {
                          entry.social!.times![time] = (entry.social!.times![time] || 0) + count;
                          entry.social!.count = (entry.social!.count || 0) + count;
                      } else {
@@ -147,12 +151,14 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
                 }
             } else { // It's a partner name
                 currentHabit = 'social';
-                const partnerName = part;
-                if (!entry.social!.partners!.includes(partnerName)) {
-                    entry.social!.partners!.push(partnerName);
+                currentPartner = part;
+                if (!entry.social!.partners!.includes(currentPartner)) {
+                    entry.social!.partners!.push(currentPartner);
                 }
-                // If a partner is mentioned without quantity/time, log it as 1 'not-sure'
-                if (j === parts.length - 1 || (!validTimes.includes(parts[j+1].toLowerCase() as TimeOfDay) && !parts[j+1].toLowerCase().startsWith('x'))) {
+                const nextPartIsTime = nextPart && validTimes.includes(nextPart.toLowerCase() as TimeOfDay);
+                const nextPartIsQuantity = nextPart && nextPart.toLowerCase().startsWith('x');
+                
+                if (!nextPart || (!nextPartIsTime && !nextPartIsQuantity)) {
                      entry.social!.times!['not-sure'] = (entry.social!.times!['not-sure'] || 0) + 1;
                      entry.social!.count = (entry.social!.count || 0) + 1;
                 }
