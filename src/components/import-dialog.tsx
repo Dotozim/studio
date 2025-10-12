@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useHabitStore } from "@/lib/store";
-import type { HabitEntry } from "@/lib/types";
+import type { HabitEntry, TimeOfDay } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "./ui/label";
 
@@ -21,6 +21,8 @@ type ImportDialogProps = {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
 };
+
+const validTimes: TimeOfDay[] = ["dawn", "morning", "afternoon", "night"];
 
 export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
   const [importData, setImportData] = useState("");
@@ -53,17 +55,22 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
       const line = lines[i].trim();
       if (line === "") continue;
 
-      const parts = line.split('/');
-      if (parts.length !== 2) continue;
+      const lineParts = line.split(' ');
+      const datePart = lineParts[0];
+      const timePart = lineParts.length > 1 ? lineParts[1].toLowerCase() : "not-sure";
+      
+      const dateSegments = datePart.split('/');
+      if (dateSegments.length !== 2) continue;
 
-      const day = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10);
+      const day = parseInt(dateSegments[0], 10);
+      const month = parseInt(dateSegments[1], 10);
 
       if (isNaN(day) || isNaN(month) || day < 1 || day > 31 || month < 1 || month > 12) {
         continue;
       }
+
+      const timeOfDay: TimeOfDay = validTimes.includes(timePart as TimeOfDay) ? timePart as TimeOfDay : "not-sure";
       
-      // Pad with leading zeros
       const monthStr = month.toString().padStart(2, '0');
       const dayStr = day.toString().padStart(2, '0');
       const dateStr = `${year}-${monthStr}-${dayStr}`;
@@ -71,7 +78,7 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
       const newEntry: HabitEntry = {
         date: dateStr,
         habits: {
-          BOB: { "not-sure": 1 },
+          BOB: { [timeOfDay]: 1 },
         },
       };
 
@@ -94,14 +101,14 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
         <DialogHeader>
           <DialogTitle>Import Data</DialogTitle>
           <DialogDescription>
-            Paste your data below. The format should be the year on the first line, followed by dates (DD/MM) on subsequent lines.
+            Paste your data below. Format: Year, then DD/MM [time] on new lines.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
             <Label htmlFor="import-data">Data</Label>
             <Textarea
                 id="import-data"
-                placeholder="2024&#10;01/07&#10;03/07&#10;..."
+                placeholder="2024&#10;01/07 morning&#10;03/07&#10;..."
                 value={importData}
                 onChange={(e) => setImportData(e.target.value)}
                 className="min-h-[200px]"
