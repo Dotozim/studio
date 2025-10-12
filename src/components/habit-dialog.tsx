@@ -55,7 +55,7 @@ const formSchema = z.object({
   const hasHabits = Object.values(data.habits).some(habitTimes => 
     habitTimes && Object.values(habitTimes).some(count => count && count > 0)
   );
-  const hasSocial = data.social && data.social.count && data.social.count > 0;
+  const hasSocial = (data.social && data.social.count && data.social.count > 0) || (data.social?.partners?.some(p => p.value.trim() !== ''));
   return hasHabits || hasSocial;
 }, {
   message: "You must log at least one habit or social interaction.",
@@ -99,7 +99,7 @@ export function HabitDialog({
 
   React.useEffect(() => {
     if (socialPartners && socialPartners.some(p => p.value.trim() !== '') && socialCount === 0) {
-      form.setValue("social.count", 1);
+      form.setValue("social.count", 1, { shouldValidate: true });
     }
   }, [socialPartners, socialCount, form]);
 
