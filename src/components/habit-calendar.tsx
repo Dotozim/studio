@@ -70,6 +70,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelec
                   variant="outline"
                   className="h-7 w-7 p-0 absolute left-1"
                   onClick={() => onMonthChange(subMonths(month, 1))}
+                  aria-label="Previous month"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -87,6 +88,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelec
                   variant="outline"
                   className="h-7 w-7 p-0 absolute right-1"
                   onClick={() => onMonthChange(addMonths(month, 1))}
+                  aria-label="Next month"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -99,6 +101,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelec
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4 w-full",
+        caption_label: 'hidden', // Hide the default caption label
         caption: "flex justify-center pt-1 relative items-center",
         nav: "space-x-1 flex items-center",
         nav_button: `h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100`,

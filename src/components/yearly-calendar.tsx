@@ -21,18 +21,19 @@ export function YearlyCalendar({ year, onDateSelect, onMonthSelect }: YearlyCale
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {months.map((month) => (
           <Card key={month.toString()} className="shadow-lg">
-            <div
-              className="text-lg font-medium font-headline text-center cursor-pointer hover:bg-accent rounded-md p-2"
+            <button
+              className="text-lg font-medium font-headline text-center w-full cursor-pointer hover:bg-accent rounded-t-lg p-2"
               onClick={() => onMonthSelect(month)}
             >
               {format(month, "MMMM")}
-            </div>
+            </button>
             <CardContent className="p-2">
               <HabitCalendar
                 month={month}
                 onDateSelect={onDateSelect}
                 onMonthChange={() => {}} // No month change in year view
                 disableNav
+                showCaption={false}
               />
             </CardContent>
           </Card>

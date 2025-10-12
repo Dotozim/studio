@@ -3,27 +3,19 @@
 import * as React from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { DayPicker, DropdownProps } from "react-day-picker"
-import { format } from "date-fns"
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from './select';
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker> & {
-  onCaptionClick?: () => void;
+  showCaption?: boolean;
 }
 
 function Calendar({
   className,
   classNames,
   showOutsideDays = true,
-  onCaptionClick,
+  showCaption = true,
   ...props
 }: CalendarProps) {
   return (
@@ -33,7 +25,7 @@ function Calendar({
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
-        caption: "flex justify-center pt-1 relative items-center",
+        caption: cn("flex justify-center pt-1 relative items-center", { "hidden": !showCaption }),
         caption_label: "text-sm font-medium",
         caption_dropdowns: "flex justify-center gap-1",
         nav: "space-x-1 flex items-center",
