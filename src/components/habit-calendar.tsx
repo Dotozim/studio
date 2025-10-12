@@ -18,7 +18,7 @@ type HabitCalendarProps = Omit<UICalendarProps, 'mode' | 'onSelect' | 'selected'
   showCaption?: boolean;
 };
 
-export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelect, disableNav, showCaption = true, ...props }: HabitCalendarProps) {
+export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelect, disableNav = false, showCaption = true, ...props }: HabitCalendarProps) {
   const entries = useHabitStore((state) => state.entries);
 
   const habitDays = (habit: Habit) =>
@@ -77,14 +77,14 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelec
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
               )}
-              <div
+               <button
                 className={cn("text-lg font-medium font-headline", onMonthSelect && !disableNav ? "cursor-pointer hover:bg-accent rounded-md px-2" : "")}
                 onClick={onMonthSelect && !disableNav ? () => onMonthSelect(month) : undefined}
-                role={onMonthSelect && !disableNav ? 'button' : 'heading'}
                 aria-live="polite"
+                disabled={!onMonthSelect || disableNav}
               >
                 {format(props.displayMonth, "MMMM")}
-              </div>
+              </button>
               {!disableNav && (
                  <Button
                   variant="outline"
