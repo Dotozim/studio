@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -6,14 +7,16 @@ import { HabitCalendar } from "@/components/habit-calendar";
 import { HabitDialog } from "@/components/habit-dialog";
 import { MonthlySummary } from "@/components/monthly-summary";
 import { YearlyCalendar } from "@/components/yearly-calendar";
+import { ImportDialog } from "@/components/import-dialog"; 
 import { useHabitStore } from "@/lib/store";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, ChevronsRightLeft } from "lucide-react";
+import { Calendar, ChevronsRightLeft, Upload } from "lucide-react";
 
 export default function Home() {
   const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()));
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isHabitDialogOpen, setIsHabitDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [view, setView] = useState<"month" | "year">("month");
 
@@ -22,7 +25,7 @@ export default function Home() {
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
       setSelectedDate(date);
-      setIsDialogOpen(true);
+      setIsHabitDialogOpen(true);
     }
   };
 
@@ -58,6 +61,15 @@ export default function Home() {
             {view === "month" ? <Calendar/> : <ChevronsRightLeft/>}
             <span className="ml-2">{view === "month" ? "Year View" : "Month View"}</span>
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsImportDialogOpen(true)}
+            className="mt-2"
+          >
+            <Upload />
+            <span className="ml-2">Import</span>
+          </Button>
         </div>
       </header>
 
@@ -86,12 +98,16 @@ export default function Home() {
 
       {selectedDate && (
         <HabitDialog
-          isOpen={isDialogOpen}
-          setIsOpen={setIsDialogOpen}
+          isOpen={isHabitDialogOpen}
+          setIsOpen={setIsHabitDialogOpen}
           date={selectedDate}
           entry={selectedEntry}
         />
       )}
+      <ImportDialog 
+        isOpen={isImportDialogOpen}
+        setIsOpen={setIsImportDialogOpen}
+      />
     </main>
   );
 }
