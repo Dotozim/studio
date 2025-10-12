@@ -43,38 +43,38 @@ body {
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
   .dark {
-    --background: 25 20% 8%; /* Dark, earthy brown */
-    --foreground: 30 10% 85%; /* Off-white / light sand */
-    --card: 25 20% 12%; /* Slightly lighter brown for cards */
-    --card-foreground: 30 10% 85%;
-    --popover: 25 20% 12%;
-    --popover-foreground: 30 10% 85%;
-    --primary: 30 70% 60%; /* A warm, earthy orange */
-    --primary-foreground: 30 90% 10%;
-    --secondary: 40 40% 20%; /* Muted olive/brown */
-    --secondary-foreground: 40 10% 90%;
-    --muted: 40 40% 15%;
-    --muted-foreground: 30 10% 60%;
-    --accent: 40 40% 25%; /* A slightly more saturated olive for accents */
-    --accent-foreground: 40 10% 90%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 30 20% 25%; /* Earthy border color */
-    --input: 30 20% 25%;
-    --ring: 30 70% 60%; /* Ring matches primary */
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --background: 232 15% 15%; /* Base */
+    --foreground: 232 59% 93%; /* Text */
+    --card: 232 15% 18%; /* Mantle */
+    --card-foreground: 232 59% 93%; /* Text */
+    --popover: 232 15% 11%; /* Crust */
+    --popover-foreground: 232 59% 93%; /* Text */
+    --primary: 247 82% 82%; /* Lavender */
+    --primary-foreground: 232 15% 15%; /* Base */
+    --secondary: 232 16% 31%; /* Surface1 */
+    --secondary-foreground: 232 59% 93%; /* Text */
+    --muted: 232 15% 24%; /* Surface0 */
+    --muted-foreground: 232 27% 81%; /* Subtext0 */
+    --accent: 137 60% 71%; /* Green */
+    --accent-foreground: 232 15% 15%; /* Base */
+    --destructive: 1 71% 70%; /* Red */
+    --destructive-foreground: 232 15% 15%; /* Base */
+    --border: 232 16% 31%; /* Surface1 */
+    --input: 232 16% 31%; /* Surface1 */
+    --ring: 217 88% 82%; /* Sapphire */
+    --chart-1: 21 91% 74%; /* Peach */
+    --chart-2: 43 93% 78%; /* Yellow */
+    --chart-3: 137 60% 71%; /* Green */
+    --chart-4: 172 55% 74%; /* Teal */
+    --chart-5: 220 85% 79%; /* Blue */
+    --sidebar-background: 232 15% 18%;
+    --sidebar-foreground: 232 59% 93%;
+    --sidebar-primary: 247 82% 82%;
+    --sidebar-primary-foreground: 232 15% 15%;
+    --sidebar-accent: 232 16% 31%;
+    --sidebar-accent-foreground: 232 59% 93%;
+    --sidebar-border: 232 15% 24%;
+    --sidebar-ring: 217 88% 82%;
   }
 }
 
