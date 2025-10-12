@@ -22,8 +22,8 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
     isSameMonth(new Date(entry.date), month)
   );
 
-  const bobCount = monthlyEntries.filter((e) => e.habits.includes("BOB")).length;
-  const flCount = monthlyEntries.filter((e) => e.habits.includes("FL")).length;
+  const bobCount = monthlyEntries.reduce((acc, e) => acc + (e.habits.BOB || 0), 0);
+  const flCount = monthlyEntries.reduce((acc, e) => acc + (e.habits.FL || 0), 0);
   
   const partnerCounts = monthlyEntries.reduce((acc, entry) => {
     if (entry.partner && entry.partner.trim()) {
@@ -33,8 +33,8 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
     return acc;
   }, {} as Record<string, number>);
   
-  const socialCount = monthlyEntries.filter(entry => entry.partner && entry.partner.trim() !== '').length;
-  const totalHabits = monthlyEntries.reduce((acc, entry) => acc + entry.habits.length, 0);
+  const socialCount = Object.values(partnerCounts).reduce((sum, count) => sum + count, 0);
+  const totalHabits = bobCount + flCount;
   const total = totalHabits + socialCount;
 
 

@@ -18,7 +18,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, disableNav =
 
   const habitDays = (habit: Habit) =>
     entries
-      .filter((entry) => entry.habits.includes(habit))
+      .filter((entry) => entry.habits[habit] && entry.habits[habit]! > 0)
       .map((entry) => {
         return parseISO(entry.date);
       });
@@ -66,6 +66,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, disableNav =
         row: "flex w-full mt-2 justify-around",
         day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 rounded-md",
         day_selected:"bg-primary/20 text-primary-foreground hover:bg-primary/30",
+        day_today: "bg-secondary text-secondary-foreground",
         day_outside: "text-muted-foreground opacity-50 invisible",
       }}
       modifiers={modifiers}

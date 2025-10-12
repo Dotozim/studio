@@ -25,9 +25,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useHabitStore } from "@/lib/store";
 import type { Habit, HabitEntry } from "@/lib/types";
+import { Minus, Plus } from "lucide-react";
 
 const habits: { id: Habit; label: string }[] = [
   { id: "BOB", label: "BOB" },
@@ -35,11 +35,15 @@ const habits: { id: Habit; label: string }[] = [
 ];
 
 const formSchema = z.object({
-  habits: z.array(z.string()),
+  habits: z.record(z.nativeEnum(Object.keys(habits.reduce((acc, h) => ({...acc, [h.id]: ''}), {})) as unknown as { [s: string]: "" | "BOB" | "FL" }), z.number().optional()),
   partner: z.string().optional(),
-}).refine((data) => data.habits.length > 0 || (data.partner && data.partner.trim() !== ''), {
-  message: "You must select at least one habit or enter a partner.",
-  path: ["habits"], // assign error to habits field
+}).refine((data) => {
+  const hasHabits = Object.values(data.habits).some(count => count && count > 0);
+  const hasPartner = data.partner && data.partner.trim() !== '';
+  return hasHabits || hasPartner;
+}, {
+  message: "You must log at least one habit or enter a partner.",
+  path: ["habits"],
 });
 
 
@@ -61,7 +65,7 @@ export function HabitDialog({
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      habits: entry?.habits || [],
+      habits: entry?.habits || {},
       partner: entry?.partner || "",
     },
   });
@@ -69,7 +73,7 @@ export function HabitDialog({
   React.useEffect(() => {
     if (isOpen) {
       form.reset({
-        habits: entry?.habits || [],
+        habits: entry?.habits || {},
         partner: entry?.partner || "",
       });
     }
@@ -79,7 +83,7 @@ export function HabitDialog({
   function onSubmit(values: z.infer<typeof formSchema>) {
     const newEntry: HabitEntry = {
       date: format(date, "yyyy-MM-dd"),
-      habits: values.habits as Habit[],
+      habits: values.habits,
       partner: values.partner,
     };
     setHabitEntry(newEntry);
@@ -92,59 +96,52 @@ export function HabitDialog({
         <DialogHeader>
           <DialogTitle>Log Habits for {format(date, "MMMM d, yyyy")}</DialogTitle>
           <DialogDescription>
-            Select habits or add a partner. Click save when you're done.
+            Log your habits for the day. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <FormField
-              control={form.control}
-              name="habits"
-              render={() => (
-                <FormItem>
-                  <div className="mb-4">
-                    <FormLabel className="text-base">Completed Habits</FormLabel>
-                    <FormDescription>
-                      Select the habits you've done today.
-                    </FormDescription>
-                  </div>
-                  {habits.map((item) => (
-                    <FormField
-                      key={item.id}
-                      control={form.control}
-                      name="habits"
-                      render={({ field }) => {
-                        return (
-                          <FormItem
-                            key={item.id}
-                            className="flex flex-row items-start space-x-3 space-y-0"
-                          >
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value?.includes(item.id)}
-                                onCheckedChange={(checked) => {
-                                  return checked
-                                    ? field.onChange([...field.value, item.id])
-                                    : field.onChange(
-                                        field.value?.filter(
-                                          (value) => value !== item.id
-                                        )
-                                      );
-                                }}
-                              />
-                            </FormControl>
-                            <FormLabel className="font-normal">
-                              {item.label}
-                            </FormLabel>
-                          </FormItem>
-                        );
-                      }}
-                    />
-                  ))}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="space-y-4">
+              <FormLabel>Completed Habits</FormLabel>
+              <FormDescription>
+                Use the buttons to log how many times you completed each habit.
+              </FormDescription>
+              {habits.map((habit) => (
+                <FormField
+                  key={habit.id}
+                  control={form.control}
+                  name={`habits.${habit.id}`}
+                  render={({ field }) => (
+                    <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                      <FormLabel className="text-base font-normal">{habit.label}</FormLabel>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => field.onChange(Math.max(0, (field.value || 0) - 1))}
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                        <span className="w-8 text-center text-lg font-bold">{field.value || 0}</span>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => field.onChange((field.value || 0) + 1)}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              ))}
+               <FormMessage>{form.formState.errors.habits?.message}</FormMessage>
+            </div>
+
 
             <FormField
               control={form.control}
