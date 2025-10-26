@@ -35,10 +35,13 @@ export default function Home() {
   const [timerData, setTimerData] = useState<{startTime: string, duration: number, edgeCount: number} | undefined>(undefined);
 
   const allEntries = useHabitStore((state) => state.entries);
+  const isLoaded = useHabitStore((state) => state.isLoaded);
+  const loadEntries = useHabitStore((state) => state.loadEntries);
 
   useEffect(() => {
+    loadEntries();
     setCurrentMonth(startOfMonth(new Date()));
-  }, []);
+  }, [loadEntries]);
   
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
@@ -78,7 +81,7 @@ export default function Home() {
     
   const currentYear = currentMonth ? getYear(currentMonth) : new Date().getFullYear();
 
-  if (!currentMonth) {
+  if (!isLoaded || !currentMonth) {
     return (
       <main className="container mx-auto p-4 sm:p-6 md:p-8">
         <header className="text-center mb-8">

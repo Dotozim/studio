@@ -9,10 +9,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { LoggedHabit, HabitType } from "@/lib/types";
 import { format, parseISO, getHours, getMinutes } from "date-fns";
-import { BookHeart, Leaf, Users } from "lucide-react";
+import { BookHeart, Leaf, Users, X } from "lucide-react";
+import { useHabitStore } from "@/lib/store";
 import { formatDuration } from "@/lib/utils";
 
 type HourlyViewDialogProps = {
@@ -48,6 +50,7 @@ const getHabitColor = (type: HabitType) => {
 }
 
 export function HourlyViewDialog({ isOpen, setIsOpen, date, entries }: HourlyViewDialogProps) {
+  const deleteHabit = useHabitStore((state) => state.deleteHabit);
     
   const sortedEntries = entries.sort((a, b) => parseISO(a.startTime).getTime() - parseISO(b.startTime).getTime());
 
@@ -72,10 +75,8 @@ export function HourlyViewDialog({ isOpen, setIsOpen, date, entries }: HourlyVie
                                 <div className="text-sm text-muted-foreground/50 h-8 flex items-center">No entries</div>
                             ) : (
                                 sectionEntries.map(entry => {
-                                    const topPosition = getMinutes(parseISO(entry.startTime));
-                                    const height = Math.max(1, entry.duration / 60); // minutes
                                     return (
-                                        <div key={entry.id} className={`flex items-center text-sm p-2 rounded-lg border ${getHabitColor(entry.type)}`}>
+                                        <div key={entry.id} className={`group relative flex items-center text-sm p-2 rounded-lg border ${getHabitColor(entry.type)}`}>
                                             <HabitIcon type={entry.type} />
                                             <span className="font-semibold">{format(parseISO(entry.startTime), 'HH:mm')}</span>
                                             <span className="mx-2 text-muted-foreground">-</span>
@@ -90,6 +91,15 @@ export function HourlyViewDialog({ isOpen, setIsOpen, date, entries }: HourlyVie
                                                     <Badge variant="secondary">{formatDuration(entry.duration)}</Badge>
                                                 )}
                                             </div>
+                                             <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="absolute top-1/2 right-2 -translate-y-1/2 h-6 w-6 opacity-0 group-hover:opacity-100"
+                                                onClick={() => deleteHabit(entry.id)}
+                                            >
+                                                <X className="h-4 w-4" />
+                                                <span className="sr-only">Delete entry</span>
+                                            </Button>
                                         </div>
                                     )
                                 })
