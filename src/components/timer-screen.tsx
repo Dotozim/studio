@@ -42,7 +42,7 @@ export function TimerScreen({ onStop }: TimerScreenProps) {
     >
       <div className="flex flex-col items-center justify-center gap-8">
         <div className="text-center">
-            {edgeCount > 0 && <p className="mb-4 text-4xl font-bold text-accent-foreground">{edgeCount}</p>}
+            <p className="mb-4 text-4xl font-bold text-accent-foreground">{edgeCount}</p>
             <Button
                 className="w-48 h-48 rounded-full text-4xl font-bold"
                 variant="outline"
