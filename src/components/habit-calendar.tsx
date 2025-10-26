@@ -22,18 +22,7 @@ type HabitCalendarProps = Omit<UICalendarProps, 'mode' | 'onSelect' | 'selected'
 
 export function HabitCalendar({ month, onMonthChange, onDateSelect, onDateDoubleClick, onMonthSelect, disableNav = false, showCaption = true, ...props }: HabitCalendarProps) {
   const entries = useHabitStore((state) => state.entries);
-  const longPressTimeout = React.useRef<NodeJS.Timeout>();
 
-  const handlePointerDown = (day: Date | undefined) => {
-    longPressTimeout.current = setTimeout(() => {
-      onDateDoubleClick?.(day);
-    }, 700); // 700ms for long press
-  };
-
-  const handlePointerUp = () => {
-    clearTimeout(longPressTimeout.current);
-  };
-  
   const handleDayClick = (day: Date | undefined) => {
     onDateSelect(day);
   }
@@ -55,6 +44,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onDateDouble
     <UICalendar
       mode="single"
       onDayClick={handleDayClick}
+      onDayDoubleClick={onDateDoubleClick}
       month={month}
       onMonthChange={onMonthChange}
       components={{
@@ -109,10 +99,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onDateDouble
           }
 
           return (
-            <div 
-              onPointerDown={() => handlePointerDown(date)}
-              onPointerUp={handlePointerUp}
-              onPointerLeave={handlePointerUp}
+            <div
               className={cn(dayClass, 'h-full w-full')}
             >
               {date.getDate()}
@@ -134,7 +121,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onDateDouble
         row: "flex w-full mt-2 justify-around",
         day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 rounded-md relative",
         day_selected:"bg-primary/20 text-primary-foreground hover:bg-primary/30",
-        day_today: "bg-secondary text-secondary-foreground",
+        day_today: "bg-accent text-accent-foreground",
         day_outside: "text-muted-foreground opacity-50 invisible",
         day_inner: "flex items-center justify-center h-full w-full",
       }}
