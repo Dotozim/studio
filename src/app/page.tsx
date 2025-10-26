@@ -7,7 +7,7 @@ import { HabitCalendar } from "@/components/habit-calendar";
 import { HabitDialog } from "@/components/habit-dialog";
 import { HourlyViewDialog } from "@/components/hourly-view-dialog";
 import { MonthlySummary } from "@/components/monthly-summary";
-import { MonthlySummaryDialog } from "@/components/monthly-summary-dialog";
+import { MonthlyHourlySummaryDialog } from "@/components/monthly-hourly-summary-dialog";
 import { YearlyCalendar } from "@/components/yearly-calendar";
 import { ImportDialog } from "@/components/import-dialog";
 import { TimerScreen } from "@/components/timer-screen"; 
@@ -23,7 +23,7 @@ export default function Home() {
   const [isHabitDialogOpen, setIsHabitDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [isHourlyViewOpen, setIsHourlyViewOpen] = useState(false);
-  const [isMonthlySummaryOpen, setIsMonthlySummaryOpen] = useState(false);
+  const [isMonthlyHourlySummaryOpen, setIsMonthlyHourlySummaryOpen] = useState(false);
   const [isTimerVisible, setIsTimerVisible] = useState(false);
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -157,7 +157,7 @@ export default function Home() {
                     onMonthChange={setCurrentMonth}
                     onDateSelect={handleDateSelect}
                     onDateDoubleClick={handleDateDoubleClick}
-                    onMonthSelect={() => setIsMonthlySummaryOpen(true)}
+                    onMonthSelect={() => setIsMonthlyHourlySummaryOpen(true)}
                   />
                 </CardContent>
               </Card>
@@ -190,9 +190,9 @@ export default function Home() {
           isOpen={isImportDialogOpen}
           setIsOpen={setIsImportDialogOpen}
         />
-        <MonthlySummaryDialog
-          isOpen={isMonthlySummaryOpen}
-          setIsOpen={setIsMonthlySummaryOpen}
+        <MonthlyHourlySummaryDialog
+          isOpen={isMonthlyHourlySummaryOpen}
+          setIsOpen={setIsMonthlyHourlySummaryOpen}
           month={currentMonth}
         />
       </main>
