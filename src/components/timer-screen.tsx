@@ -52,8 +52,8 @@ export function TimerScreen({ onStop }: TimerScreenProps) {
             <div className="text-8xl font-bold font-mono text-primary tabular-nums">
             {formatTime(elapsedTime)}
             </div>
+            {edgeCount > 0 && <p className="mt-2 text-4xl font-bold text-accent-foreground">{edgeCount}</p>}
             <p className="mt-4 text-lg text-muted-foreground">Click anywhere to stop</p>
-            {edgeCount > 0 && <p className="mt-2 text-2xl font-bold text-accent-foreground">{edgeCount}</p>}
         </div>
       </div>
     </div>
