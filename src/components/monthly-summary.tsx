@@ -10,7 +10,8 @@ import {
 } from "@/components/ui/card";
 import { useHabitStore } from "@/lib/store";
 import { Separator } from "./ui/separator";
-import type { TimeOfDay, Habit } from "@/lib/types";
+import type { TimeOfDay, Habit, HabitTime } from "@/lib/types";
+import { formatDuration } from "@/lib/utils";
 
 type MonthlySummaryProps = {
   month: Date;
@@ -30,38 +31,57 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
     isSameMonth(new Date(entry.date), month)
   );
 
-  const countHabits = (habitName: Habit) => {
-    const counts = monthlyEntries.reduce((acc, e) => {
+  type HabitCounts = {
+    total: number;
+    duration: number;
+    byTime: { [key in TimeOfDay]?: HabitTime };
+  };
+
+  const countHabits = (habitName: Habit): HabitCounts => {
+    return monthlyEntries.reduce((acc, e) => {
       const habitTimes = e.habits[habitName];
       if (habitTimes) {
         for (const time in habitTimes) {
             const timeKey = time as TimeOfDay;
-            const count = habitTimes[timeKey] || 0;
-            acc.total += count;
-            if (timeKey !== 'not-sure') {
-                acc.byTime[timeKey] = (acc.byTime[timeKey] || 0) + count;
+            const timeData = habitTimes[timeKey];
+            if (timeData && timeData.count > 0) {
+              acc.total += timeData.count;
+              acc.duration += timeData.duration || 0;
+              if (timeKey !== 'not-sure') {
+                  if (!acc.byTime[timeKey]) {
+                    acc.byTime[timeKey] = { count: 0, duration: 0 };
+                  }
+                  acc.byTime[timeKey]!.count += timeData.count;
+                  acc.byTime[timeKey]!.duration = (acc.byTime[timeKey]!.duration || 0) + (timeData.duration || 0);
+              }
             }
         }
       }
       return acc;
-    }, { total: 0, byTime: {} as { [key in TimeOfDay]?: number }});
-    return counts;
+    }, { total: 0, duration: 0, byTime: {} });
   }
   
-  const socialCounts = monthlyEntries.reduce((acc, entry) => {
+  const socialCounts: HabitCounts = monthlyEntries.reduce((acc, entry) => {
     const socialTimes = entry.social?.times;
     if (socialTimes) {
       for (const time in socialTimes) {
         const timeKey = time as TimeOfDay;
-        const count = socialTimes[timeKey] || 0;
-        acc.total += count;
-        if (timeKey !== 'not-sure') {
-            acc.byTime[timeKey] = (acc.byTime[timeKey] || 0) + count;
+        const timeData = socialTimes[timeKey];
+        if (timeData && timeData.count > 0) {
+            acc.total += timeData.count;
+            acc.duration += timeData.duration || 0;
+            if (timeKey !== 'not-sure') {
+                if (!acc.byTime[timeKey]) {
+                    acc.byTime[timeKey] = { count: 0, duration: 0 };
+                }
+                acc.byTime[timeKey]!.count += timeData.count;
+                acc.byTime[timeKey]!.duration = (acc.byTime[timeKey]!.duration || 0) + (timeData.duration || 0);
+            }
         }
       }
     }
     return acc;
-  }, { total: 0, byTime: {} as { [key in TimeOfDay]?: number } });
+  }, { total: 0, duration: 0, byTime: {} });
 
   const bobCounts = countHabits("BOB");
   const flCounts = countHabits("FL");
@@ -71,38 +91,56 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
       entry.social.partners.forEach(partnerNameRaw => {
         const partnerName = partnerNameRaw.trim();
         if (partnerName) {
-          acc[partnerName] = (acc[partnerName] || 0) + (entry.social?.count || 1);
+          const partnerDuration = Object.values(entry.social?.times || {}).reduce((sum, time) => sum + (time?.duration || 0), 0)
+          const partnerCount = entry.social?.count || 1;
+          
+          if (!acc[partnerName]) {
+            acc[partnerName] = { count: 0, duration: 0 };
+          }
+          acc[partnerName].count += partnerCount;
+          acc[partnerName].duration += partnerDuration;
         }
       });
     }
     return acc;
-  }, {} as Record<string, number>);
+  }, {} as Record<string, { count: number, duration: number }>);
   
   const total = bobCounts.total + flCounts.total + socialCounts.total;
+  const totalDuration = bobCounts.duration + flCounts.duration + socialCounts.duration;
 
   const totalCountsByTime = timesOfDay.reduce((acc, time) => {
     const timeId = time.id as TimeOfDay;
-    const timeTotal = (bobCounts.byTime[timeId] || 0) + 
-                      (flCounts.byTime[timeId] || 0) + 
-                      (socialCounts.byTime[timeId] || 0);
-    if (timeTotal > 0) {
-      acc[timeId] = timeTotal;
+    const bobTime = bobCounts.byTime[timeId] || { count: 0, duration: 0 };
+    const flTime = flCounts.byTime[timeId] || { count: 0, duration: 0 };
+    const socialTime = socialCounts.byTime[timeId] || { count: 0, duration: 0 };
+    
+    const timeTotalCount = bobTime.count + flTime.count + socialTime.count;
+    const timeTotalDuration = (bobTime.duration || 0) + (flTime.duration || 0) + (socialTime.duration || 0);
+
+    if (timeTotalCount > 0) {
+      acc[timeId] = { count: timeTotalCount, duration: timeTotalDuration };
     }
     return acc;
-  }, {} as { [key in TimeOfDay]?: number });
+  }, {} as { [key in TimeOfDay]?: HabitTime });
 
-  const HabitSummary = ({ habit, counts, colorClass }: { habit: string, counts: { total: number, byTime: { [key in TimeOfDay]?: number } }, colorClass: string }) => (
+  const HabitSummary = ({ habit, counts, colorClass }: { habit: string, counts: HabitCounts, colorClass: string }) => (
     <div className={`p-3 rounded-lg ${colorClass} text-card-foreground`}>
       <div className="flex justify-between items-center">
         <span className="font-medium">{habit}</span>
-        <span className="font-semibold">{counts.total}</span>
+        <div className="text-right">
+            <span className="font-semibold">{counts.total}</span>
+            {counts.duration > 0 && <div className="text-xs text-card-foreground/80">{formatDuration(counts.duration)}</div>}
+        </div>
       </div>
       <div className="text-xs text-card-foreground/80 mt-1 space-y-0.5">
         {timesOfDay.map(time => (
-            counts.byTime[time.id] ? (
+            counts.byTime[time.id] && counts.byTime[time.id]!.count > 0 ? (
                 <div key={time.id} className="flex justify-between">
                     <span>{time.label}</span>
-                    <span>{counts.byTime[time.id]}</span>
+                    <div className="text-right">
+                        <span>{counts.byTime[time.id]!.count}</span>
+                        {counts.byTime[time.id]!.duration! > 0 && <span className="ml-2 text-card-foreground/70">({formatDuration(counts.byTime[time.id]!.duration!)})</span>}
+                    </div>
                 </div>
             ) : null
         ))}
@@ -127,10 +165,13 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
           <>
             <Separator />
             <p className="font-medium text-muted-foreground pt-2">Partners</p>
-            {Object.entries(partnerCounts).map(([name, count]) => (
+            {Object.entries(partnerCounts).map(([name, data]) => (
               <div key={name} className="flex justify-between items-center p-3 rounded-lg bg-destructive/10 text-card-foreground">
                 <span className="font-medium">{name}</span>
-                <span className="font-semibold">{count}</span>
+                 <div className="text-right">
+                    <span className="font-semibold">{data.count}</span>
+                    {data.duration > 0 && <div className="text-xs text-card-foreground/80">{formatDuration(data.duration)}</div>}
+                </div>
               </div>
             ))}
           </>
@@ -139,17 +180,24 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
         <Separator />
         <div className="flex justify-between items-center font-bold text-base">
           <span>TOTAL</span>
-          <span>{total}</span>
+          <div className="text-right">
+              <span>{total}</span>
+              {totalDuration > 0 && <div className="text-xs font-normal text-muted-foreground">{formatDuration(totalDuration)}</div>}
+          </div>
         </div>
         <div className="text-xs text-muted-foreground/80 space-y-0.5">
-            {timesOfDay.map(time => (
-                totalCountsByTime[time.id] ? (
+            {timesOfDay.map(time => {
+                const timeData = totalCountsByTime[time.id];
+                return timeData && timeData.count > 0 ? (
                     <div key={time.id} className="flex justify-between pl-2">
                         <span>{time.label}</span>
-                        <span>{totalCountsByTime[time.id]}</span>
+                        <div className="text-right">
+                          <span>{timeData.count}</span>
+                          {timeData.duration! > 0 && <span className="ml-2 text-muted-foreground/70">({formatDuration(timeData.duration!)})</span>}
+                        </div>
                     </div>
                 ) : null
-            ))}
+            })}
         </div>
       </CardContent>
     </Card>

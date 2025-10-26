@@ -26,11 +26,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useHabitStore } from "@/lib/store";
-import type { Habit, HabitEntry, TimeOfDay } from "@/lib/types";
+import type { Habit, HabitEntry, TimeOfDay, HabitTime } from "@/lib/types";
 import { Minus, Plus, Sun, Moon, Sunrise, Sunset, HelpCircle, Users, Trash2 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 import { Separator } from "./ui/separator";
 import { ScrollArea } from "./ui/scroll-area";
+import { produce } from "immer";
+import { formatDuration } from "@/lib/utils";
 
 const habits: { id: Habit; label: string }[] = [
   { id: "BOB", label: "BOB" },
@@ -45,24 +47,29 @@ const timesOfDay: { id: TimeOfDay; label: string; icon: React.ElementType }[] = 
   { id: "not-sure", label: "Not Sure", icon: HelpCircle },
 ];
 
+const habitTimeSchema = z.object({
+  count: z.number().optional(),
+  duration: z.number().optional(),
+});
+
 const formSchema = z.object({
-  habits: z.record(z.string(), z.record(z.string(), z.number().optional()).optional()),
+  habits: z.record(z.string(), z.record(z.string(), habitTimeSchema.optional()).optional()),
   social: z.object({
     partners: z.array(z.object({ value: z.string() })).optional(),
-    times: z.record(z.string(), z.number().optional()).optional(),
+    times: z.record(z.string(), habitTimeSchema.optional()).optional(),
   }).optional(),
 }).refine((data) => {
-  const hasHabits = Object.values(data.habits).some(habitTimes => 
-    habitTimes && Object.values(habitTimes).some(count => count && count > 0)
-  );
-  const socialTimes = data.social?.times;
-  const hasSocialTime = socialTimes && Object.values(socialTimes).some(count => count && count > 0);
-  const hasSocialPartners = data.social?.partners?.some(p => p.value.trim() !== '');
+    const hasHabits = Object.values(data.habits).some(habitTimes => 
+        habitTimes && Object.values(habitTimes).some(time => time && time.count && time.count > 0)
+    );
+    const socialTimes = data.social?.times;
+    const hasSocialTime = socialTimes && Object.values(socialTimes).some(time => time && time.count && time.count > 0);
+    const hasSocialPartners = data.social?.partners?.some(p => p.value.trim() !== '');
 
-  return hasHabits || hasSocialTime || hasSocialPartners;
+    return hasHabits || hasSocialTime || hasSocialPartners;
 }, {
-  message: "You must log at least one habit or social interaction.",
-  path: ["habits"],
+    message: "You must log at least one habit or social interaction.",
+    path: ["habits"],
 });
 
 
@@ -71,6 +78,7 @@ type HabitDialogProps = {
   setIsOpen: (isOpen: boolean) => void;
   date: Date;
   entry?: HabitEntry;
+  timerDuration?: number;
 };
 
 export function HabitDialog({
@@ -78,6 +86,7 @@ export function HabitDialog({
   setIsOpen,
   date,
   entry,
+  timerDuration,
 }: HabitDialogProps) {
   const setHabitEntry = useHabitStore((state) => state.setHabitEntry);
 
@@ -101,12 +110,11 @@ export function HabitDialog({
   const socialTimes = form.watch("social.times");
 
   React.useEffect(() => {
-    const totalSocialCount = Object.values(socialTimes || {}).reduce((acc, count) => acc + (count || 0), 0);
+    const totalSocialCount = Object.values(socialTimes || {}).reduce((acc, time) => acc + (time?.count || 0), 0);
     if (socialPartners && socialPartners.some(p => p.value.trim() !== '') && totalSocialCount === 0) {
-        // If there's a partner but no time is logged, default 'not-sure' to 1
-        const currentNotSure = form.getValues("social.times.not-sure") || 0;
+        const currentNotSure = form.getValues("social.times.not-sure")?.count || 0;
         if (currentNotSure === 0) {
-            form.setValue("social.times.not-sure", 1, { shouldValidate: true });
+            form.setValue("social.times.not-sure.count", 1, { shouldValidate: true });
         }
     }
   }, [socialPartners, socialTimes, form]);
@@ -127,7 +135,7 @@ export function HabitDialog({
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     const socialTimes = values.social?.times || {};
-    let socialCount = Object.values(socialTimes).reduce((acc, count) => acc + (count || 0), 0);
+    let socialCount = Object.values(socialTimes).reduce((acc, time) => acc + (time?.count || 0), 0);
     
     const validPartners = values.social?.partners?.map(p => p.value).filter(p => p.trim() !== '') || [];
     const hasSocialPartners = validPartners.length > 0;
@@ -135,7 +143,9 @@ export function HabitDialog({
     if (hasSocialPartners && socialCount === 0) {
       socialCount = 1;
       if(!socialTimes['not-sure']) {
-        socialTimes['not-sure'] = 1;
+        socialTimes['not-sure'] = { count: 1 };
+      } else {
+        socialTimes['not-sure']!.count = (socialTimes['not-sure']!.count || 0) + 1;
       }
     }
 
@@ -153,6 +163,35 @@ export function HabitDialog({
     setIsOpen(false);
   }
 
+  const handleTimeUpdate = (
+    category: 'habits' | 'social',
+    habitOrSocial: Habit | 'times',
+    time: TimeOfDay,
+    change: number
+  ) => {
+    const path = category === 'habits' ? `habits.${habitOrSocial}.${time}` : `social.times.${time}`;
+    
+    const currentCount = form.getValues(`${path}.count` as const) || 0;
+    const currentDuration = form.getValues(`${path}.duration` as const) || 0;
+
+    const newCount = Math.max(0, currentCount + change);
+    let newDuration = currentDuration;
+
+    if (change > 0 && timerDuration) {
+        newDuration += timerDuration;
+    } else if (change < 0 && currentCount > 0) {
+        // If there's a duration and we're removing a count, proportionally remove duration
+        newDuration = Math.max(0, currentDuration - (currentDuration / currentCount));
+    }
+    
+    if (newCount === 0) {
+        newDuration = 0;
+    }
+
+    form.setValue(`${path}.count` as const, newCount, { shouldValidate: true });
+    form.setValue(`${path}.duration` as const, newDuration, { shouldValidate: true });
+  };
+  
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-lg grid-rows-[auto_minmax(0,1fr)_auto] max-h-[90vh]">
@@ -160,6 +199,7 @@ export function HabitDialog({
           <DialogTitle>Log Habits for {format(date, "MMMM d, yyyy")}</DialogTitle>
           <DialogDescription>
             Log your habits for the day. Click save when you're done.
+            {timerDuration && ` (Logged ${formatDuration(timerDuration)})`}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -194,7 +234,12 @@ export function HabitDialog({
                                 <FormItem className="flex items-center justify-between p-2 rounded-lg">
                                   <div className="flex items-center gap-2">
                                     <time.icon className="h-4 w-4 text-muted-foreground" />
-                                    <FormLabel className="text-sm font-normal">{time.label}</FormLabel>
+                                    <div className="flex flex-col">
+                                      <FormLabel className="text-sm font-normal">{time.label}</FormLabel>
+                                      {field.value?.duration && field.value.duration > 0 ? (
+                                          <span className="text-xs text-muted-foreground">{formatDuration(field.value.duration)}</span>
+                                      ) : null}
+                                    </div>
                                   </div>
                                   <div className="flex items-center gap-2">
                                     <Button
@@ -202,17 +247,17 @@ export function HabitDialog({
                                         variant="outline"
                                         size="icon"
                                         className="h-8 w-8"
-                                        onClick={() => field.onChange(Math.max(0, (field.value || 0) - 1))}
+                                        onClick={() => handleTimeUpdate('habits', habit.id, time.id, -1)}
                                     >
                                         <Minus className="h-4 w-4" />
                                     </Button>
-                                    <span className="w-8 text-center text-lg font-bold">{field.value || 0}</span>
+                                    <span className="w-8 text-center text-lg font-bold">{field.value?.count || 0}</span>
                                     <Button
                                         type="button"
                                         variant="outline"
                                         size="icon"
                                         className="h-8 w-8"
-                                        onClick={() => field.onChange((field.value || 0) + 1)}
+                                        onClick={() => handleTimeUpdate('habits', habit.id, time.id, 1)}
                                     >
                                         <Plus className="h-4 w-4" />
                                     </Button>
@@ -247,7 +292,12 @@ export function HabitDialog({
                               <FormItem className="flex items-center justify-between p-2 rounded-lg">
                                 <div className="flex items-center gap-2">
                                   <time.icon className="h-4 w-4 text-muted-foreground" />
-                                  <FormLabel className="text-sm font-normal">{time.label}</FormLabel>
+                                    <div className="flex flex-col">
+                                      <FormLabel className="text-sm font-normal">{time.label}</FormLabel>
+                                      {field.value?.duration && field.value.duration > 0 ? (
+                                          <span className="text-xs text-muted-foreground">{formatDuration(field.value.duration)}</span>
+                                      ) : null}
+                                    </div>
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <Button
@@ -255,17 +305,17 @@ export function HabitDialog({
                                       variant="outline"
                                       size="icon"
                                       className="h-8 w-8"
-                                      onClick={() => field.onChange(Math.max(0, (field.value || 0) - 1))}
+                                      onClick={() => handleTimeUpdate('social', 'times', time.id, -1)}
                                   >
                                       <Minus className="h-4 w-4" />
                                   </Button>
-                                  <span className="w-8 text-center text-lg font-bold">{field.value || 0}</span>
+                                  <span className="w-8 text-center text-lg font-bold">{field.value?.count || 0}</span>
                                   <Button
                                       type="button"
                                       variant="outline"
                                       size="icon"
                                       className="h-8 w-8"
-                                      onClick={() => field.onChange((field.value || 0) + 1)}
+                                      onClick={() => handleTimeUpdate('social', 'times', time.id, 1)}
                                   >
                                       <Plus className="h-4 w-4" />
                                   </Button>

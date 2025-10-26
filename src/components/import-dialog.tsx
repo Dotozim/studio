@@ -24,7 +24,7 @@ type ImportDialogProps = {
 };
 
 const validTimes: TimeOfDay[] = ["dawn", "morning", "afternoon", "night"];
-const validHabits: Habit[] = ["BOB", "FL"];
+const habitKeywords: string[] = ["BOB", "FL", "1"];
 
 export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
   const [importData, setImportData] = useState("");
@@ -78,7 +78,7 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
         if (!entriesToUpdate[dateStr]) {
             const existingEntry = allEntries.find(e => e.date === dateStr);
             entriesToUpdate[dateStr] = existingEntry 
-                ? produce(existingEntry, draft => {}) // Deep copy
+                ? produce(existingEntry, draft => {})
                 : {
                     date: dateStr,
                     habits: {},
@@ -87,81 +87,56 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
         }
         
         const entry = entriesToUpdate[dateStr];
-
-        // Case: Only date is present, it's a BOB entry
-        if (parts.length === 1) {
-            entry.habits.BOB = {
-                ...entry.habits.BOB,
-                'not-sure': (entry.habits.BOB?.['not-sure'] || 0) + 1,
-            };
-            continue; // Go to next line
+        let currentContext: { type: 'habit' | 'social', name: Habit | string } | null = null;
+        
+        const processContext = (time: TimeOfDay = 'not-sure', count: number = 1) => {
+            if (!currentContext) return;
+            if (currentContext.type === 'habit') {
+                const habitName = currentContext.name as Habit;
+                if (!entry.habits[habitName]) entry.habits[habitName] = {};
+                if (!entry.habits[habitName]![time]) entry.habits[habitName]![time] = { count: 0, duration: 0 };
+                entry.habits[habitName]![time]!.count += count;
+            } else { // social
+                const partnerName = currentContext.name;
+                if (!entry.social) entry.social = { partners: [], count: 0, times: {} };
+                if (!entry.social.partners!.includes(partnerName)) {
+                    entry.social.partners!.push(partnerName);
+                }
+                if (!entry.social.times![time]) entry.social.times![time] = { count: 0, duration: 0 };
+                entry.social.times![time]!.count += count;
+                entry.social.count += count;
+            }
+            currentContext = null;
         }
 
-        let currentHabit: Habit | 'social' | null = null;
+        const habitsInLine = parts.slice(1);
+        if (habitsInLine.length === 0) { // Just date, so it's a BOB
+            currentContext = { type: 'habit', name: 'BOB' };
+            processContext();
+            continue;
+        }
         
-        for (let j = 1; j < parts.length; j++) {
-            let part = parts[j];
-            let nextPart = j + 1 < parts.length ? parts[j+1] : null;
+        for (let j = 0; j < habitsInLine.length; j++) {
+            const part = habitsInLine[j];
             const partUpper = part.toUpperCase();
-            
-            if (part === '1' || partUpper === 'BOB' || partUpper === 'FL') {
-                currentHabit = (part === '1' ? 'BOB' : partUpper) as Habit;
-                const nextPartIsTime = nextPart && validTimes.includes(nextPart.toLowerCase() as TimeOfDay);
-                const nextPartIsQuantity = nextPart && nextPart.toLowerCase().startsWith('x');
 
-                if (!nextPart || (!nextPartIsTime && !nextPartIsQuantity)) {
-                    entry.habits[currentHabit] = {
-                        ...entry.habits[currentHabit],
-                        'not-sure': (entry.habits[currentHabit]?.['not-sure'] || 0) + 1,
-                    };
-                    currentHabit = null; // Reset after logging
-                }
-            } else if (validTimes.includes(part as TimeOfDay)) {
-                const time: TimeOfDay = part as TimeOfDay;
-                if (currentHabit) {
-                     if (currentHabit === 'social') {
-                        entry.social!.times![time] = (entry.social!.times![time] || 0) + 1;
-                        entry.social!.count = (entry.social!.count || 0) + 1;
-                    } else {
-                        entry.habits[currentHabit] = {
-                            ...entry.habits[currentHabit],
-                            [time]: (entry.habits[currentHabit]?.[time] || 0) + 1,
-                        };
-                    }
-                    currentHabit = null; // Reset after logging
-                }
-            } else if (part.toLowerCase().startsWith('x') && !isNaN(parseInt(part.substring(1), 10))) {
-                const count = parseInt(part.substring(1), 10);
-                if (currentHabit) {
-                     const time: TimeOfDay = (nextPart && validTimes.includes(nextPart as TimeOfDay)) ? nextPart as TimeOfDay : 'not-sure';
-                     if (currentHabit === 'social') {
-                         entry.social!.times![time] = (entry.social!.times![time] || 0) + count;
-                         entry.social!.count = (entry.social!.count || 0) + count;
-                     } else {
-                         entry.habits[currentHabit] = {
-                            ...entry.habits[currentHabit],
-                            [time]: (entry.habits[currentHabit]?.[time] || 0) + count,
-                        };
-                     }
-                     if (time !== 'not-sure') j++; // Skip next part since it's used as time
-                     currentHabit = null; // Reset after logging
-                }
+            if (habitKeywords.includes(partUpper)) {
+                processContext(); // Process any pending context
+                currentContext = { type: 'habit', name: partUpper === '1' ? 'BOB' : partUpper as Habit };
+            } else if (validTimes.includes(part.toLowerCase() as TimeOfDay)) {
+                processContext(part.toLowerCase() as TimeOfDay);
+            } else if (part.toLowerCase().startsWith('x') && !isNaN(parseInt(part.substring(1)))) {
+                const count = parseInt(part.substring(1));
+                const nextPart = (j + 1 < habitsInLine.length) ? habitsInLine[j+1].toLowerCase() : null;
+                const time = nextPart && validTimes.includes(nextPart as TimeOfDay) ? nextPart as TimeOfDay : 'not-sure';
+                processContext(time, count);
+                if (time !== 'not-sure') j++; // Skip next part as it's been consumed
             } else { // It's a partner name
-                currentHabit = 'social';
-                const currentPartner = part;
-                if (!entry.social!.partners!.includes(currentPartner)) {
-                    entry.social!.partners!.push(currentPartner);
-                }
-                const nextPartIsTime = nextPart && validTimes.includes(nextPart.toLowerCase() as TimeOfDay);
-                const nextPartIsQuantity = nextPart && nextPart.toLowerCase().startsWith('x');
-                
-                if (!nextPart || (!nextPartIsTime && !nextPartIsQuantity)) {
-                     entry.social!.times!['not-sure'] = (entry.social!.times!['not-sure'] || 0) + 1;
-                     entry.social!.count = (entry.social!.count || 0) + 1;
-                     currentHabit = null; // Reset after logging
-                }
+                processContext();
+                currentContext = { type: 'social', name: part };
             }
         }
+        processContext(); // Process any remaining context at the end of the line
     }
 
     Object.values(entriesToUpdate).forEach(entry => {

@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Calendar as UICalendar, CalendarProps as UICalendarProps } from "@/components/ui/calendar";
 import { useHabitStore } from "@/lib/store";
-import type { Habit } from "@/lib/types";
+import type { Habit, HabitTime } from "@/lib/types";
 import { parseISO, format, addMonths, subMonths } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -24,8 +24,8 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelec
   const habitDays = (habit: Habit) =>
     entries
       .filter((entry) => {
-        const habitTimes = entry.habits[habit];
-        return habitTimes && Object.values(habitTimes).some(count => count && count > 0);
+        const habitTimes = entry.habits[habit] as { [key: string]: HabitTime } | undefined;
+        return habitTimes && Object.values(habitTimes).some(time => time?.count && time.count > 0);
       })
       .map((entry) => {
         return parseISO(entry.date);

@@ -10,7 +10,7 @@ import { YearlyCalendar } from "@/components/yearly-calendar";
 import { ImportDialog } from "@/components/import-dialog";
 import { TimerScreen } from "@/components/timer-screen"; 
 import { useHabitStore } from "@/lib/store";
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, ChevronsRightLeft, Upload } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,6 +22,7 @@ export default function Home() {
   const [isTimerVisible, setIsTimerVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [view, setView] = useState<"month" | "year">("month");
+  const [timerDuration, setTimerDuration] = useState<number | undefined>(undefined);
 
   const allEntries = useHabitStore((state) => state.entries);
 
@@ -31,6 +32,7 @@ export default function Home() {
 
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
+      setTimerDuration(undefined);
       setSelectedDate(date);
       setIsHabitDialogOpen(true);
     }
@@ -41,9 +43,11 @@ export default function Home() {
     setView("month");
   };
 
-  const handleTimerStop = () => {
+  const handleTimerStop = (elapsedTime: number) => {
     setIsTimerVisible(false);
-    handleDateSelect(new Date());
+    setTimerDuration(elapsedTime);
+    setSelectedDate(new Date());
+    setIsHabitDialogOpen(true);
   };
 
   const selectedEntry = selectedDate
@@ -78,12 +82,12 @@ export default function Home() {
             </Card>
             <div className="md:col-span-1">
                <Card className="shadow-lg">
-                <CardHeader>
+                <CardContent className="p-6">
                   <CardTitle className="font-headline text-2xl">
                     Month Summary
                   </CardTitle>
-                   <Skeleton className="h-4 w-40" />
-                </CardHeader>
+                   <Skeleton className="h-4 w-40 mt-2" />
+                </CardContent>
                 <CardContent className="space-y-4 text-sm">
                    <Skeleton className="h-16 w-full" />
                    <Skeleton className="h-16 w-full" />
@@ -160,6 +164,7 @@ export default function Home() {
             setIsOpen={setIsHabitDialogOpen}
             date={selectedDate}
             entry={selectedEntry}
+            timerDuration={timerDuration}
           />
         )}
         <ImportDialog 
