@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -21,6 +22,21 @@ type HabitCalendarProps = Omit<UICalendarProps, 'mode' | 'onSelect' | 'selected'
 
 export function HabitCalendar({ month, onMonthChange, onDateSelect, onDateDoubleClick, onMonthSelect, disableNav = false, showCaption = true, ...props }: HabitCalendarProps) {
   const entries = useHabitStore((state) => state.entries);
+  const longPressTimeout = React.useRef<NodeJS.Timeout>();
+
+  const handlePointerDown = (day: Date | undefined) => {
+    longPressTimeout.current = setTimeout(() => {
+      onDateDoubleClick?.(day);
+    }, 700); // 700ms for long press
+  };
+
+  const handlePointerUp = () => {
+    clearTimeout(longPressTimeout.current);
+  };
+  
+  const handleDayClick = (day: Date | undefined) => {
+    onDateSelect(day);
+  }
 
   const getDaysForHabit = (habit: HabitType) =>
     entries
@@ -38,13 +54,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onDateDouble
   return (
     <UICalendar
       mode="single"
-      onSelect={(day, _, __, e) => {
-        if (e.detail === 2) { // Double click
-            onDateDoubleClick?.(day);
-        } else {
-            onDateSelect(day);
-        }
-      }}
+      onDayClick={handleDayClick}
       month={month}
       onMonthChange={onMonthChange}
       components={{
@@ -92,10 +102,22 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onDateDouble
             'day-bob': habits.includes('BOB'),
             'day-fl': habits.includes('FL'),
             'day-social': habits.includes('SOCIAL'),
-            'text-muted-foreground opacity-50 invisible': isOutside,
           });
+          
+          if(isOutside) {
+            return <div className="text-muted-foreground opacity-50 invisible h-full w-full">{date.getDate()}</div>
+          }
 
-          return <div className={dayClass} style={{height: '100%', width: '100%'}}>{date.getDate()}</div>
+          return (
+            <div 
+              onPointerDown={() => handlePointerDown(date)}
+              onPointerUp={handlePointerUp}
+              onPointerLeave={handlePointerUp}
+              className={cn(dayClass, 'h-full w-full')}
+            >
+              {date.getDate()}
+            </div>
+          )
         }
       }}
       className="p-0"
