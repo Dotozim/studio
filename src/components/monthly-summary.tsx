@@ -129,7 +129,6 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
         <span className="font-medium">{habit}</span>
         <div className="text-right">
             <span className="font-semibold">{counts.total}</span>
-            {counts.duration > 0 && <div className="text-xs text-card-foreground/80">{formatDuration(counts.duration)}</div>}
         </div>
       </div>
       <div className="text-xs text-card-foreground/80 mt-1 space-y-0.5">
@@ -170,7 +169,6 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
                 <span className="font-medium">{name}</span>
                  <div className="text-right">
                     <span className="font-semibold">{data.count}</span>
-                    {data.duration > 0 && <div className="text-xs text-card-foreground/80">{formatDuration(data.duration)}</div>}
                 </div>
               </div>
             ))}
