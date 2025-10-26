@@ -1,14 +1,15 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 type TimerScreenProps = {
-  onStop: (elapsedTime: number) => void;
+  onStop: (startTime: Date, elapsedTime: number) => void;
 };
 
 export function TimerScreen({ onStop }: TimerScreenProps) {
   const [elapsedTime, setElapsedTime] = useState(0);
+  const startTimeRef = useRef<Date>(new Date());
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -30,7 +31,7 @@ export function TimerScreen({ onStop }: TimerScreenProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/90 backdrop-blur-sm cursor-pointer"
-      onClick={() => onStop(elapsedTime)}
+      onClick={() => onStop(startTimeRef.current, elapsedTime)}
     >
       <div className="text-8xl font-bold font-mono text-primary tabular-nums">
         {formatTime(elapsedTime)}

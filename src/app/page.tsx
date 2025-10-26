@@ -1,10 +1,11 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
-import { format, startOfMonth, getYear } from "date-fns";
+import { useState, useEffect, useCallback } from "react";
+import { format, startOfMonth, getYear, parseISO, isSameDay } from "date-fns";
 import { HabitCalendar } from "@/components/habit-calendar";
 import { HabitDialog } from "@/components/habit-dialog";
+import { HourlyViewDialog } from "@/components/hourly-view-dialog";
 import { MonthlySummary } from "@/components/monthly-summary";
 import { YearlyCalendar } from "@/components/yearly-calendar";
 import { ImportDialog } from "@/components/import-dialog";
@@ -14,47 +15,56 @@ import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, ChevronsRightLeft, Upload } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { LoggedHabit } from "@/lib/types";
 
 export default function Home() {
   const [currentMonth, setCurrentMonth] = useState<Date | null>(null);
   const [isHabitDialogOpen, setIsHabitDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [isHourlyViewOpen, setIsHourlyViewOpen] = useState(false);
   const [isTimerVisible, setIsTimerVisible] = useState(false);
+
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [entriesForSelectedDate, setEntriesForSelectedDate] = useState<LoggedHabit[]>([]);
+  
   const [view, setView] = useState<"month" | "year">("month");
-  const [timerDuration, setTimerDuration] = useState<number | undefined>(undefined);
+  
+  const [timerData, setTimerData] = useState<{startTime: string, duration: number} | undefined>(undefined);
 
   const allEntries = useHabitStore((state) => state.entries);
 
   useEffect(() => {
     setCurrentMonth(startOfMonth(new Date()));
   }, []);
-
+  
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
-      setTimerDuration(undefined);
+      setTimerData(undefined);
       setSelectedDate(date);
       setIsHabitDialogOpen(true);
     }
   };
+
+  const handleDateDoubleClick = useCallback((date: Date | undefined) => {
+    if (date) {
+        setSelectedDate(date);
+        const entries = allEntries.filter(entry => isSameDay(parseISO(entry.startTime), date));
+        setEntriesForSelectedDate(entries);
+        setIsHourlyViewOpen(true);
+    }
+  }, [allEntries]);
 
   const handleMonthSelect = (month: Date) => {
     setCurrentMonth(month);
     setView("month");
   };
 
-  const handleTimerStop = (elapsedTime: number) => {
+  const handleTimerStop = (startTime: Date, elapsedTime: number) => {
     setIsTimerVisible(false);
-    setTimerDuration(elapsedTime);
+    setTimerData({ startTime: startTime.toISOString(), duration: elapsedTime });
     setSelectedDate(new Date());
     setIsHabitDialogOpen(true);
   };
-
-  const selectedEntry = selectedDate
-    ? allEntries.find(
-        (entry) => entry.date === format(selectedDate, "yyyy-MM-dd")
-      )
-    : undefined;
     
   const currentYear = currentMonth ? getYear(currentMonth) : new Date().getFullYear();
 
@@ -145,6 +155,7 @@ export default function Home() {
                     month={currentMonth}
                     onMonthChange={setCurrentMonth}
                     onDateSelect={handleDateSelect}
+                    onDateDoubleClick={handleDateDoubleClick}
                     onMonthSelect={() => setView('year')}
                   />
                 </CardContent>
@@ -155,7 +166,7 @@ export default function Home() {
             </div>
           </>
         ) : (
-          <YearlyCalendar year={currentYear} onDateSelect={handleDateSelect} onMonthSelect={handleMonthSelect} />
+          <YearlyCalendar year={currentYear} onDateSelect={handleDateSelect} onDateDoubleClick={handleDateDoubleClick} onMonthSelect={handleMonthSelect} />
         )}
 
         {selectedDate && (
@@ -163,8 +174,15 @@ export default function Home() {
             isOpen={isHabitDialogOpen}
             setIsOpen={setIsHabitDialogOpen}
             date={selectedDate}
-            entry={selectedEntry}
-            timerDuration={timerDuration}
+            timerData={timerData}
+          />
+        )}
+         {selectedDate && (
+          <HourlyViewDialog
+            isOpen={isHourlyViewOpen}
+            setIsOpen={setIsHourlyViewOpen}
+            date={selectedDate}
+            entries={entriesForSelectedDate}
           />
         )}
         <ImportDialog 

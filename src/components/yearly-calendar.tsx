@@ -8,10 +8,11 @@ import { Card, CardContent } from "./ui/card";
 type YearlyCalendarProps = {
   year: number;
   onDateSelect: (date: Date | undefined) => void;
+  onDateDoubleClick: (date: Date | undefined) => void;
   onMonthSelect: (date: Date) => void;
 };
 
-export function YearlyCalendar({ year, onDateSelect, onMonthSelect }: YearlyCalendarProps) {
+export function YearlyCalendar({ year, onDateSelect, onDateDoubleClick, onMonthSelect }: YearlyCalendarProps) {
   const yearStart = startOfYear(new Date(year, 0, 1));
   const months = Array.from({ length: 12 }).map((_, i) => addMonths(yearStart, i));
 
@@ -31,6 +32,7 @@ export function YearlyCalendar({ year, onDateSelect, onMonthSelect }: YearlyCale
               <HabitCalendar
                 month={month}
                 onDateSelect={onDateSelect}
+                onDateDoubleClick={onDateDoubleClick}
                 onMonthChange={() => {}} // No month change in year view
                 disableNav
                 showCaption={false}

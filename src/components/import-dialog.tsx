@@ -12,11 +12,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { useHabitStore } from "@/lib/store";
-import type { HabitEntry, TimeOfDay, Habit } from "@/lib/types";
+import { useLegacyHabitStore, useHabitStore } from "@/lib/store";
+import type { OldHabitEntry, TimeOfDay, Habit, LoggedHabit, HabitType } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "./ui/label";
 import { produce } from "immer";
+import { set, parseISO } from 'date-fns';
 
 type ImportDialogProps = {
   isOpen: boolean;
@@ -26,10 +27,19 @@ type ImportDialogProps = {
 const validTimes: TimeOfDay[] = ["dawn", "morning", "afternoon", "night"];
 const habitKeywords: string[] = ["BOB", "FL", "1"];
 
+const getTimeOfDayDate = (date: Date, time: TimeOfDay): Date => {
+    switch (time) {
+        case 'dawn': return set(date, { hours: 5, minutes: 0, seconds: 0 });
+        case 'morning': return set(date, { hours: 9, minutes: 0, seconds: 0 });
+        case 'afternoon': return set(date, { hours: 14, minutes: 0, seconds: 0 });
+        case 'night': return set(date, { hours: 21, minutes: 0, seconds: 0 });
+        default: return date;
+    }
+}
+
 export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
   const [importData, setImportData] = useState("");
-  const setHabitEntry = useHabitStore((state) => state.setHabitEntry);
-  const allEntries = useHabitStore((state) => state.entries);
+  const addHabit = useHabitStore((state) => state.addHabit);
   const { toast } = useToast();
 
   const handleImport = () => {
@@ -54,7 +64,6 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
     }
     
     let importedCount = 0;
-    const entriesToUpdate: { [date: string]: HabitEntry } = {};
 
     for (let i = 1; i < lines.length; i++) {
         const line = lines[i].trim();
@@ -74,79 +83,62 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
         }
 
         const dateStr = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-
-        if (!entriesToUpdate[dateStr]) {
-            const existingEntry = allEntries.find(e => e.date === dateStr);
-            entriesToUpdate[dateStr] = existingEntry 
-                ? produce(existingEntry, draft => {})
-                : {
-                    date: dateStr,
-                    habits: {},
-                    social: { partners: [], count: 0, times: {} },
-                  };
-        }
+        const baseDate = parseISO(dateStr);
         
-        const entry = entriesToUpdate[dateStr];
-        let currentContext: { type: 'habit' | 'social', name: Habit | string } | null = null;
-        
-        const processContext = (time: TimeOfDay = 'not-sure', count: number = 1) => {
-            if (!currentContext) return;
-            if (currentContext.type === 'habit') {
-                const habitName = currentContext.name as Habit;
-                if (!entry.habits[habitName]) entry.habits[habitName] = {};
-                if (!entry.habits[habitName]![time]) entry.habits[habitName]![time] = { count: 0, duration: 0 };
-                entry.habits[habitName]![time]!.count += count;
-            } else { // social
-                const partnerName = currentContext.name;
-                if (!entry.social) entry.social = { partners: [], count: 0, times: {} };
-                if (!entry.social.partners!.includes(partnerName)) {
-                    entry.social.partners!.push(partnerName);
-                }
-                if (!entry.social.times![time]) entry.social.times![time] = { count: 0, duration: 0 };
-                entry.social.times![time]!.count += count;
-                entry.social.count += count;
-            }
-            currentContext = null;
-        }
-
         const habitsInLine = parts.slice(1);
         if (habitsInLine.length === 0) { // Just date, so it's a BOB
-            currentContext = { type: 'habit', name: 'BOB' };
-            processContext();
+            addHabit({
+                type: 'BOB',
+                startTime: getTimeOfDayDate(baseDate, 'not-sure').toISOString(),
+                duration: 0,
+            });
+            importedCount++;
             continue;
         }
         
+        let currentHabit: { type: HabitType, partners?: string[], count: number} | null = null;
+        
+        const processCurrentHabit = (time: TimeOfDay) => {
+            if (!currentHabit) return;
+
+            for(let i=0; i<currentHabit.count; i++) {
+                addHabit({
+                    type: currentHabit.type,
+                    startTime: getTimeOfDayDate(baseDate, time).toISOString(),
+                    duration: 0,
+                    partners: currentHabit.partners,
+                });
+            }
+            importedCount++;
+            currentHabit = null;
+        }
+
         for (let j = 0; j < habitsInLine.length; j++) {
             const part = habitsInLine[j];
             const partUpper = part.toUpperCase();
 
-            if (habitKeywords.includes(partUpper)) {
-                processContext(); // Process any pending context
-                currentContext = { type: 'habit', name: partUpper === '1' ? 'BOB' : partUpper as Habit };
-            } else if (validTimes.includes(part.toLowerCase() as TimeOfDay)) {
-                processContext(part.toLowerCase() as TimeOfDay);
+            if (validTimes.includes(part.toLowerCase() as TimeOfDay)) {
+                processCurrentHabit(part.toLowerCase() as TimeOfDay);
             } else if (part.toLowerCase().startsWith('x') && !isNaN(parseInt(part.substring(1)))) {
-                const count = parseInt(part.substring(1));
-                const nextPart = (j + 1 < habitsInLine.length) ? habitsInLine[j+1].toLowerCase() : null;
-                const time = nextPart && validTimes.includes(nextPart as TimeOfDay) ? nextPart as TimeOfDay : 'not-sure';
-                processContext(time, count);
-                if (time !== 'not-sure') j++; // Skip next part as it's been consumed
-            } else { // It's a partner name
-                processContext();
-                currentContext = { type: 'social', name: part };
+                if (currentHabit) {
+                    currentHabit.count = parseInt(part.substring(1));
+                }
+            } else { // It's a new habit or partner
+                processCurrentHabit('not-sure'); // process previous habit with default time
+                
+                if (habitKeywords.includes(partUpper)) {
+                    currentHabit = { type: (partUpper === '1' ? 'BOB' : partUpper as Habit), count: 1 };
+                } else { // partner name
+                    currentHabit = { type: 'SOCIAL', partners: [part], count: 1 };
+                }
             }
         }
-        processContext(); // Process any remaining context at the end of the line
+        processCurrentHabit('not-sure'); // process any leftover habit
     }
-
-    Object.values(entriesToUpdate).forEach(entry => {
-        setHabitEntry(entry);
-        importedCount++;
-    });
 
     toast({
         title: "Import Successful",
-        description: `Successfully imported or updated ${importedCount} dates.`,
+        description: `Successfully imported ${importedCount} habits.`,
     });
 
     setImportData("");

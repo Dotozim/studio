@@ -3,8 +3,8 @@
 import * as React from "react";
 import { Calendar as UICalendar, CalendarProps as UICalendarProps } from "@/components/ui/calendar";
 import { useHabitStore } from "@/lib/store";
-import type { Habit, HabitTime } from "@/lib/types";
-import { parseISO, format, addMonths, subMonths } from "date-fns";
+import type { HabitType } from "@/lib/types";
+import { parseISO, format, addMonths, subMonths, isSameDay } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
@@ -13,50 +13,37 @@ type HabitCalendarProps = Omit<UICalendarProps, 'mode' | 'onSelect' | 'selected'
   month: Date;
   onMonthChange: (date: Date) => void;
   onDateSelect: (date: Date | undefined) => void;
+  onDateDoubleClick?: (date: Date | undefined) => void;
   onMonthSelect?: (date: Date) => void;
   disableNav?: boolean;
   showCaption?: boolean;
 };
 
-export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelect, disableNav = false, showCaption = true, ...props }: HabitCalendarProps) {
+export function HabitCalendar({ month, onMonthChange, onDateSelect, onDateDoubleClick, onMonthSelect, disableNav = false, showCaption = true, ...props }: HabitCalendarProps) {
   const entries = useHabitStore((state) => state.entries);
 
-  const habitDays = (habit: Habit) =>
+  const getDaysForHabit = (habit: HabitType) =>
     entries
-      .filter((entry) => {
-        const habitTimes = entry.habits[habit] as { [key: string]: HabitTime } | undefined;
-        return habitTimes && Object.values(habitTimes).some(time => time?.count && time.count > 0);
-      })
-      .map((entry) => {
-        return parseISO(entry.date);
-      });
+      .filter((entry) => entry.type === habit)
+      .map((entry) => parseISO(entry.startTime));
 
-  const socialDays = entries
-    .filter(
-      (entry) =>
-        entry.social && entry.social.count > 0
-    )
-    .map((entry) => {
-      return parseISO(entry.date);
-    });
-
-  const modifiers = {
-    bob: habitDays("BOB"),
-    fl: habitDays("FL"),
-    social: socialDays,
-  };
-
-  const modifiersClassNames = {
-    bob: "day-bob",
-    fl: "day-fl",
-    social: "day-social",
-  };
-
+  const daysWithHabits = (day: Date): string[] => {
+      const habits: HabitType[] = [];
+      if (getDaysForHabit("BOB").some(d => isSameDay(d, day))) habits.push("BOB");
+      if (getDaysForHabit("FL").some(d => isSameDay(d, day))) habits.push("FL");
+      if (getDaysForHabit("SOCIAL").some(d => isSameDay(d, day))) habits.push("SOCIAL");
+      return habits;
+  }
+  
   return (
     <UICalendar
       mode="single"
-      onSelect={(day) => {
-        onDateSelect(day);
+      onSelect={(day, _, __, e) => {
+        if (e.detail === 2) { // Double click
+            onDateDoubleClick?.(day);
+        } else {
+            onDateSelect(day);
+        }
       }}
       month={month}
       onMonthChange={onMonthChange}
@@ -98,6 +85,18 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelec
             </div>
           );
         },
+        Day: ({date, displayMonth}) => {
+          const habits = daysWithHabits(date);
+          const isOutside = date.getMonth() !== displayMonth.getMonth();
+          const dayClass = cn({
+            'day-bob': habits.includes('BOB'),
+            'day-fl': habits.includes('FL'),
+            'day-social': habits.includes('SOCIAL'),
+            'text-muted-foreground opacity-50 invisible': isOutside,
+          });
+
+          return <div className={dayClass} style={{height: '100%', width: '100%'}}>{date.getDate()}</div>
+        }
       }}
       className="p-0"
       classNames={{
@@ -111,13 +110,12 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onMonthSelec
         head_row: "flex justify-around",
         head_cell: "text-muted-foreground rounded-md w-9 font-normal text-sm",
         row: "flex w-full mt-2 justify-around",
-        day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 rounded-md",
+        day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 rounded-md relative",
         day_selected:"bg-primary/20 text-primary-foreground hover:bg-primary/30",
         day_today: "bg-secondary text-secondary-foreground",
         day_outside: "text-muted-foreground opacity-50 invisible",
+        day_inner: "flex items-center justify-center h-full w-full",
       }}
-      modifiers={modifiers}
-      modifiersClassNames={modifiersClassNames}
       {...props}
     />
   );
