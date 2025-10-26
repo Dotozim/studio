@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { format, startOfMonth, getYear, parseISO, isSameDay } from "date-fns";
+import { format, startOfMonth, getYear, parseISO, isSameDay, addYears, subYears } from "date-fns";
 import { HabitCalendar } from "@/components/habit-calendar";
 import { HabitDialog } from "@/components/habit-dialog";
 import { HourlyViewDialog } from "@/components/hourly-view-dialog";
@@ -14,7 +14,7 @@ import { TimerScreen } from "@/components/timer-screen";
 import { useHabitStore } from "@/lib/store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Upload } from "lucide-react";
+import { Upload, ChevronLeft, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { LoggedHabit } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -68,6 +68,13 @@ export default function Home() {
     setSelectedDate(new Date());
     setIsHabitDialogOpen(true);
   };
+
+  const handleYearChange = (direction: 'next' | 'prev') => {
+    if (currentMonth) {
+      const newMonth = direction === 'next' ? addYears(currentMonth, 1) : subYears(currentMonth, 1);
+      setCurrentMonth(newMonth);
+    }
+  }
     
   const currentYear = currentMonth ? getYear(currentMonth) : new Date().getFullYear();
 
@@ -138,15 +145,26 @@ export default function Home() {
           </div>
         </header>
 
-        <h2 
-          className={cn(
-            "text-3xl font-bold text-center mb-8 font-headline",
-            "cursor-pointer hover:text-primary transition-colors"
-          )}
-          onClick={() => setView(view === 'month' ? 'year' : 'month')}
-        >
-          {currentYear}
-        </h2>
+        <div className="flex justify-center items-center gap-4 mb-8">
+          <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleYearChange('prev')}>
+            <ChevronLeft className="h-4 w-4" />
+            <span className="sr-only">Previous Year</span>
+          </Button>
+          <h2 
+            className={cn(
+              "text-3xl font-bold text-center font-headline",
+              "cursor-pointer hover:text-primary transition-colors"
+            )}
+            onClick={() => setView(view === 'month' ? 'year' : 'month')}
+          >
+            {currentYear}
+          </h2>
+          <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => handleYearChange('next')}>
+            <ChevronRight className="h-4 w-4" />
+            <span className="sr-only">Next Year</span>
+          </Button>
+        </div>
+
 
         {view === "month" ? (
           <>
