@@ -1,3 +1,4 @@
+
 "use client";
 
 import { isSameMonth, format } from "date-fns";
@@ -137,8 +138,8 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
                 <div key={time.id} className="flex justify-between">
                     <span>{time.label}</span>
                     <div className="text-right">
+                        {counts.byTime[time.id]!.duration! > 0 && <span className="mr-2 text-card-foreground/70">({formatDuration(counts.byTime[time.id]!.duration!)})</span>}
                         <span>{counts.byTime[time.id]!.count}</span>
-                        {counts.byTime[time.id]!.duration! > 0 && <span className="ml-2 text-card-foreground/70">({formatDuration(counts.byTime[time.id]!.duration!)})</span>}
                     </div>
                 </div>
             ) : null
@@ -190,8 +191,8 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
                     <div key={time.id} className="flex justify-between pl-2">
                         <span>{time.label}</span>
                         <div className="text-right">
+                          {timeData.duration! > 0 && <span className="mr-2 text-muted-foreground/70">({formatDuration(timeData.duration!)})</span>}
                           <span>{timeData.count}</span>
-                          {timeData.duration! > 0 && <span className="ml-2 text-muted-foreground/70">({formatDuration(timeData.duration!)})</span>}
                         </div>
                     </div>
                 ) : null
