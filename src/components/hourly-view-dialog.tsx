@@ -77,13 +77,15 @@ export function HourlyViewDialog({ isOpen, setIsOpen, date, entries }: HourlyVie
                                 sectionEntries.map(entry => {
                                     return (
                                         <div key={entry.id} className={`group relative flex items-center text-sm p-2 rounded-lg border ${getHabitColor(entry.type)}`}>
-                                            <HabitIcon type={entry.type} />
-                                            <span className="font-semibold">{format(parseISO(entry.startTime), 'HH:mm')}</span>
-                                            <span className="mx-2 text-muted-foreground">-</span>
-                                            <span>
-                                                {entry.type === 'SOCIAL' ? `Social w/ ${entry.partners?.join(', ') || 'friends'}` : entry.type}
-                                            </span>
-                                            <div className="ml-auto flex items-center gap-2">
+                                            <div className="flex items-center flex-grow">
+                                                <HabitIcon type={entry.type} />
+                                                <span className="font-semibold">{format(parseISO(entry.startTime), 'HH:mm')}</span>
+                                                <span className="mx-2 text-muted-foreground">-</span>
+                                                <span>
+                                                    {entry.type === 'SOCIAL' ? `Social w/ ${entry.partners?.join(', ') || 'friends'}` : entry.type}
+                                                </span>
+                                            </div>
+                                            <div className="ml-auto flex items-center gap-2 pr-8">
                                                 {entry.edgeCount && entry.edgeCount > 0 && (
                                                     <Badge variant="outline" className="text-xs">{entry.edgeCount} edge{entry.edgeCount > 1 ? 's' : ''}</Badge>
                                                 )}
