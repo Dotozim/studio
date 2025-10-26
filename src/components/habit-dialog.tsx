@@ -234,14 +234,12 @@ export function HabitDialog({
                                 <FormItem className="flex items-center justify-between p-2 rounded-lg">
                                   <div className="flex items-center gap-2">
                                     <time.icon className="h-4 w-4 text-muted-foreground" />
-                                    <div className="flex flex-col">
-                                      <FormLabel className="text-sm font-normal">{time.label}</FormLabel>
-                                      {field.value?.duration && field.value.duration > 0 ? (
-                                          <span className="text-xs text-muted-foreground">{formatDuration(field.value.duration)}</span>
-                                      ) : null}
-                                    </div>
+                                    <FormLabel className="text-sm font-normal">{time.label}</FormLabel>
                                   </div>
                                   <div className="flex items-center gap-2">
+                                    {field.value?.duration && field.value.duration > 0 ? (
+                                        <span className="text-xs text-muted-foreground w-16 text-right">{formatDuration(field.value.duration)}</span>
+                                    ) : <div className="w-16"/>}
                                     <Button
                                         type="button"
                                         variant="outline"
@@ -292,14 +290,12 @@ export function HabitDialog({
                               <FormItem className="flex items-center justify-between p-2 rounded-lg">
                                 <div className="flex items-center gap-2">
                                   <time.icon className="h-4 w-4 text-muted-foreground" />
-                                    <div className="flex flex-col">
-                                      <FormLabel className="text-sm font-normal">{time.label}</FormLabel>
-                                      {field.value?.duration && field.value.duration > 0 ? (
-                                          <span className="text-xs text-muted-foreground">{formatDuration(field.value.duration)}</span>
-                                      ) : null}
-                                    </div>
+                                  <FormLabel className="text-sm font-normal">{time.label}</FormLabel>
                                 </div>
                                 <div className="flex items-center gap-2">
+                                    {field.value?.duration && field.value.duration > 0 ? (
+                                        <span className="text-xs text-muted-foreground w-16 text-right">{formatDuration(field.value.duration)}</span>
+                                    ) : <div className="w-16"/>}
                                   <Button
                                       type="button"
                                       variant="outline"
