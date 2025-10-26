@@ -31,7 +31,7 @@ export default function Home() {
   
   const [view, setView] = useState<"month" | "year">("month");
   
-  const [timerData, setTimerData] = useState<{startTime: string, duration: number} | undefined>(undefined);
+  const [timerData, setTimerData] = useState<{startTime: string, duration: number, edgeCount: number} | undefined>(undefined);
 
   const allEntries = useHabitStore((state) => state.entries);
 
@@ -61,9 +61,9 @@ export default function Home() {
     setView("month");
   };
 
-  const handleTimerStop = (startTime: Date, elapsedTime: number) => {
+  const handleTimerStop = (startTime: Date, elapsedTime: number, edgeCount: number) => {
     setIsTimerVisible(false);
-    setTimerData({ startTime: startTime.toISOString(), duration: elapsedTime });
+    setTimerData({ startTime: startTime.toISOString(), duration: elapsedTime, edgeCount: edgeCount });
     setSelectedDate(new Date());
     setIsHabitDialogOpen(true);
   };

@@ -1,3 +1,4 @@
+
 export type Habit = "BOB" | "FL";
 export type TimeOfDay = "morning" | "afternoon" | "night" | "dawn" | "not-sure";
 
@@ -29,4 +30,5 @@ export interface LoggedHabit {
   startTime: string; // ISO string
   duration: number; // in seconds
   partners?: string[]; // for social habits
+  edgeCount?: number;
 }

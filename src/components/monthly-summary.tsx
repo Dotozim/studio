@@ -44,7 +44,8 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
   type HabitStats = {
     total: number;
     duration: number;
-    byTime: { [key in TimeOfDay]?: { count: number; duration: number } };
+    edgeCount: number;
+    byTime: { [key in TimeOfDay]?: { count: number; duration: number; edgeCount: number; } };
   };
 
   const calculateStats = (entries: LoggedHabit[]): HabitStats => {
@@ -52,15 +53,17 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
         const timeOfDay = getTimeOfDay(parseISO(e.startTime));
         acc.total += 1;
         acc.duration += e.duration;
+        acc.edgeCount += e.edgeCount || 0;
         if (timeOfDay !== 'not-sure') {
             if (!acc.byTime[timeOfDay]) {
-                acc.byTime[timeOfDay] = { count: 0, duration: 0 };
+                acc.byTime[timeOfDay] = { count: 0, duration: 0, edgeCount: 0 };
             }
             acc.byTime[timeOfDay]!.count += 1;
             acc.byTime[timeOfDay]!.duration += e.duration;
+            acc.byTime[timeOfDay]!.edgeCount += e.edgeCount || 0;
         }
         return acc;
-    }, { total: 0, duration: 0, byTime: {} });
+    }, { total: 0, duration: 0, edgeCount: 0, byTime: {} });
   }
   
   const bobStats = calculateStats(monthlyEntries.filter(e => e.type === 'BOB'));
@@ -81,21 +84,23 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
   
   const total = bobStats.total + flStats.total + socialStats.total;
   const totalDuration = bobStats.duration + flStats.duration + socialStats.duration;
+  const totalEdgeCount = bobStats.edgeCount + flStats.edgeCount + socialStats.edgeCount;
 
   const totalCountsByTime = timesOfDay.reduce((acc, time) => {
     const timeId = time.id as TimeOfDay;
-    const bobTime = bobStats.byTime[timeId] || { count: 0, duration: 0 };
-    const flTime = flStats.byTime[timeId] || { count: 0, duration: 0 };
-    const socialTime = socialStats.byTime[timeId] || { count: 0, duration: 0 };
+    const bobTime = bobStats.byTime[timeId] || { count: 0, duration: 0, edgeCount: 0 };
+    const flTime = flStats.byTime[timeId] || { count: 0, duration: 0, edgeCount: 0 };
+    const socialTime = socialStats.byTime[timeId] || { count: 0, duration: 0, edgeCount: 0 };
     
     const timeTotalCount = bobTime.count + flTime.count + socialTime.count;
     const timeTotalDuration = bobTime.duration + flTime.duration + socialTime.duration;
+    const timeTotalEdgeCount = bobTime.edgeCount + flTime.edgeCount + socialTime.edgeCount;
 
     if (timeTotalCount > 0) {
-      acc[timeId] = { count: timeTotalCount, duration: timeTotalDuration };
+      acc[timeId] = { count: timeTotalCount, duration: timeTotalDuration, edgeCount: timeTotalEdgeCount };
     }
     return acc;
-  }, {} as { [key in TimeOfDay]?: {count: number, duration: number} });
+  }, {} as { [key in TimeOfDay]?: {count: number, duration: number, edgeCount: number} });
 
   const HabitSummary = ({ habit, counts, colorClass }: { habit: string, counts: HabitStats, colorClass: string }) => (
     <div className={`p-3 rounded-lg ${colorClass} text-card-foreground`}>
@@ -110,8 +115,9 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
             counts.byTime[time.id] && counts.byTime[time.id]!.count > 0 ? (
                 <div key={time.id} className="flex justify-between">
                     <span>{time.label}</span>
-                    <div className="text-right">
-                        {counts.byTime[time.id]!.duration > 0 && <span className="mr-2 text-card-foreground/70">({formatDuration(counts.byTime[time.id]!.duration)})</span>}
+                    <div className="text-right space-x-2">
+                        {counts.byTime[time.id]!.edgeCount > 0 && <span className="text-card-foreground/70">{counts.byTime[time.id]!.edgeCount} edges</span>}
+                        {counts.byTime[time.id]!.duration > 0 && <span className="text-card-foreground/70">({formatDuration(counts.byTime[time.id]!.duration)})</span>}
                         <span>{counts.byTime[time.id]!.count}</span>
                     </div>
                 </div>
@@ -154,7 +160,13 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
           <span>TOTAL</span>
           <div className="text-right">
               <span>{total}</span>
-              {totalDuration > 0 && <div className="text-xs font-normal text-muted-foreground">{formatDuration(totalDuration)}</div>}
+              {(totalDuration > 0 || totalEdgeCount > 0) && (
+                <div className="text-xs font-normal text-muted-foreground">
+                    {totalEdgeCount > 0 && <span>{totalEdgeCount} edges</span>}
+                    {totalEdgeCount > 0 && totalDuration > 0 && <span>, </span>}
+                    {totalDuration > 0 && <span>{formatDuration(totalDuration)}</span>}
+                </div>
+              )}
           </div>
         </div>
         <div className="text-xs text-muted-foreground/80 space-y-0.5">
@@ -163,8 +175,9 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
                 return timeData && timeData.count > 0 ? (
                     <div key={time.id} className="flex justify-between pl-2">
                         <span>{time.label}</span>
-                        <div className="text-right">
-                          {timeData.duration! > 0 && <span className="mr-2 text-muted-foreground/70">({formatDuration(timeData.duration!)})</span>}
+                        <div className="text-right space-x-2">
+                          {timeData.edgeCount! > 0 && <span className="text-muted-foreground/70">{timeData.edgeCount} edges</span>}
+                          {timeData.duration! > 0 && <span className="text-muted-foreground/70">({formatDuration(timeData.duration!)})</span>}
                           <span>{timeData.count}</span>
                         </div>
                     </div>

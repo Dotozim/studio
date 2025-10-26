@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -40,7 +41,7 @@ type HabitDialogProps = {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   date: Date;
-  timerData?: {startTime: string, duration: number};
+  timerData?: {startTime: string, duration: number, edgeCount: number};
 };
 
 export function HabitDialog({
@@ -74,11 +75,13 @@ export function HabitDialog({
   function onSubmit(values: z.infer<typeof formSchema>) {
     const startTime = timerData ? timerData.startTime : set(date, { hours: 12 }).toISOString();
     const duration = timerData ? timerData.duration : 0;
+    const edgeCount = timerData ? timerData.edgeCount : 0;
     
     const newHabit: Omit<LoggedHabit, 'id'> = {
         type: values.habitType,
         startTime: startTime,
         duration: duration,
+        edgeCount: edgeCount > 0 ? edgeCount : undefined,
         partners: values.habitType === 'SOCIAL' ? values.partners?.split(',').map(p => p.trim()).filter(Boolean) : undefined,
     };
     
@@ -86,14 +89,17 @@ export function HabitDialog({
     setIsOpen(false);
   }
   
+  const timerDescription = timerData 
+    ? `(${formatDuration(timerData.duration)} logged${timerData.edgeCount > 0 ? `, ${timerData.edgeCount} edges` : ''})` 
+    : '';
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Log Habit for {format(date, "MMMM d, yyyy")}</DialogTitle>
           <DialogDescription>
-            What did you just complete?
-            {timerData && ` (${formatDuration(timerData.duration)} logged)`}
+            What did you just complete? {timerDescription}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>

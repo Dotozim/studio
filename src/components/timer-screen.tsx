@@ -2,13 +2,15 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { Button } from "./ui/button";
 
 type TimerScreenProps = {
-  onStop: (startTime: Date, elapsedTime: number) => void;
+  onStop: (startTime: Date, elapsedTime: number, edgeCount: number) => void;
 };
 
 export function TimerScreen({ onStop }: TimerScreenProps) {
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [edgeCount, setEdgeCount] = useState(0);
   const startTimeRef = useRef<Date>(new Date());
 
   useEffect(() => {
@@ -27,16 +29,29 @@ export function TimerScreen({ onStop }: TimerScreenProps) {
       .toString()
       .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
   };
+  
+  const handleEdgeClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    setEdgeCount(c => c + 1);
+  }
 
   return (
     <div
       className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/90 backdrop-blur-sm cursor-pointer"
-      onClick={() => onStop(startTimeRef.current, elapsedTime)}
+      onClick={() => onStop(startTimeRef.current, elapsedTime, edgeCount)}
     >
+      <Button
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[150px] w-48 h-48 rounded-full text-4xl font-bold"
+        variant="outline"
+        onClick={handleEdgeClick}
+      >
+        EDGE
+      </Button>
       <div className="text-8xl font-bold font-mono text-primary tabular-nums">
         {formatTime(elapsedTime)}
       </div>
       <p className="mt-4 text-lg text-muted-foreground">Click anywhere to stop</p>
+      {edgeCount > 0 && <p className="mt-2 text-2xl font-bold text-accent-foreground">{edgeCount}</p>}
     </div>
   );
 }

@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -81,9 +82,14 @@ export function HourlyViewDialog({ isOpen, setIsOpen, date, entries }: HourlyVie
                                             <span>
                                                 {entry.type === 'SOCIAL' ? `Social w/ ${entry.partners?.join(', ') || 'friends'}` : entry.type}
                                             </span>
-                                            {entry.duration > 0 && (
-                                                <Badge variant="secondary" className="ml-auto">{formatDuration(entry.duration)}</Badge>
-                                            )}
+                                            <div className="ml-auto flex items-center gap-2">
+                                                {entry.edgeCount && entry.edgeCount > 0 && (
+                                                    <Badge variant="outline" className="text-xs">{entry.edgeCount} edge{entry.edgeCount > 1 ? 's' : ''}</Badge>
+                                                )}
+                                                {entry.duration > 0 && (
+                                                    <Badge variant="secondary">{formatDuration(entry.duration)}</Badge>
+                                                )}
+                                            </div>
                                         </div>
                                     )
                                 })

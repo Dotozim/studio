@@ -59,6 +59,7 @@ const getHabitColor = (type: HabitType) => {
 type MonthlyHabitStats = {
     count: number;
     duration: number;
+    edgeCount: number;
     partners?: Record<string, number>;
 }
 
@@ -74,10 +75,11 @@ export function MonthlyHourlySummaryDialog({ isOpen, setIsOpen, month }: Monthly
     
     const habitStats = sectionEntries.reduce((habitAcc, entry) => {
         if(!habitAcc[entry.type]) {
-            habitAcc[entry.type] = { count: 0, duration: 0, partners: {} };
+            habitAcc[entry.type] = { count: 0, duration: 0, edgeCount: 0, partners: {} };
         }
         habitAcc[entry.type]!.count++;
         habitAcc[entry.type]!.duration += entry.duration;
+        habitAcc[entry.type]!.edgeCount += entry.edgeCount || 0;
 
         if (entry.type === 'SOCIAL' && entry.partners) {
             entry.partners.forEach(partner => {
@@ -131,11 +133,18 @@ export function MonthlyHourlySummaryDialog({ isOpen, setIsOpen, month }: Monthly
                                                    ({Object.entries(stats.partners).map(([name, count]) => `${name} (x${count})`).join(', ')})
                                                 </span>
                                             )}
-                                            <div className="ml-auto text-right">
-                                                <Badge variant="secondary">{stats.count} {stats.count > 1 ? 'times' : 'time'}</Badge>
-                                                {stats.duration > 0 && (
-                                                    <div className="text-xs text-muted-foreground mt-1">{formatDuration(stats.duration)} total</div>
+                                            <div className="ml-auto text-right flex items-center gap-2">
+                                                 {stats.edgeCount > 0 && (
+                                                    <div className="text-right">
+                                                        <Badge variant="outline">{stats.edgeCount} edge{stats.edgeCount > 1 ? 's' : ''}</Badge>
+                                                    </div>
                                                 )}
+                                                <div className="text-right">
+                                                    <Badge variant="secondary">{stats.count} {stats.count > 1 ? 'times' : 'time'}</Badge>
+                                                    {stats.duration > 0 && (
+                                                        <div className="text-xs text-muted-foreground mt-1">{formatDuration(stats.duration)} total</div>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     )
