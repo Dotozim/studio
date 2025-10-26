@@ -41,18 +41,20 @@ export function TimerScreen({ onStop }: TimerScreenProps) {
       onClick={() => onStop(startTimeRef.current, elapsedTime, edgeCount)}
     >
       <div className="flex flex-col items-center justify-center gap-8">
-        <Button
-          className="w-48 h-48 rounded-full text-4xl font-bold"
-          variant="outline"
-          onClick={handleEdgeClick}
-        >
-          EDGE
-        </Button>
+        <div className="text-center">
+            {edgeCount > 0 && <p className="mb-4 text-4xl font-bold text-accent-foreground">{edgeCount}</p>}
+            <Button
+                className="w-48 h-48 rounded-full text-4xl font-bold"
+                variant="outline"
+                onClick={handleEdgeClick}
+                >
+                EDGE
+            </Button>
+        </div>
         <div className="text-center">
             <div className="text-8xl font-bold font-mono text-primary tabular-nums">
             {formatTime(elapsedTime)}
             </div>
-            {edgeCount > 0 && <p className="mt-2 text-4xl font-bold text-accent-foreground">{edgeCount}</p>}
             <p className="mt-4 text-lg text-muted-foreground">Click anywhere to stop</p>
         </div>
       </div>
