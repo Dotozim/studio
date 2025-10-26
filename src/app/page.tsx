@@ -7,11 +7,12 @@ import { HabitCalendar } from "@/components/habit-calendar";
 import { HabitDialog } from "@/components/habit-dialog";
 import { HourlyViewDialog } from "@/components/hourly-view-dialog";
 import { MonthlySummary } from "@/components/monthly-summary";
+import { MonthlySummaryDialog } from "@/components/monthly-summary-dialog";
 import { YearlyCalendar } from "@/components/yearly-calendar";
 import { ImportDialog } from "@/components/import-dialog";
 import { TimerScreen } from "@/components/timer-screen"; 
 import { useHabitStore } from "@/lib/store";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, ChevronsRightLeft, Upload } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,6 +23,7 @@ export default function Home() {
   const [isHabitDialogOpen, setIsHabitDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [isHourlyViewOpen, setIsHourlyViewOpen] = useState(false);
+  const [isMonthlySummaryOpen, setIsMonthlySummaryOpen] = useState(false);
   const [isTimerVisible, setIsTimerVisible] = useState(false);
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -92,12 +94,11 @@ export default function Home() {
             </Card>
             <div className="md:col-span-1">
                <Card className="shadow-lg">
-                <CardContent className="p-6">
+                <CardHeader>
                   <CardTitle className="font-headline text-2xl">
                     Month Summary
                   </CardTitle>
-                   <Skeleton className="h-4 w-40 mt-2" />
-                </CardContent>
+                </CardHeader>
                 <CardContent className="space-y-4 text-sm">
                    <Skeleton className="h-16 w-full" />
                    <Skeleton className="h-16 w-full" />
@@ -156,7 +157,7 @@ export default function Home() {
                     onMonthChange={setCurrentMonth}
                     onDateSelect={handleDateSelect}
                     onDateDoubleClick={handleDateDoubleClick}
-                    onMonthSelect={() => setView('year')}
+                    onMonthSelect={() => setIsMonthlySummaryOpen(true)}
                   />
                 </CardContent>
               </Card>
@@ -188,6 +189,11 @@ export default function Home() {
         <ImportDialog 
           isOpen={isImportDialogOpen}
           setIsOpen={setIsImportDialogOpen}
+        />
+        <MonthlySummaryDialog
+          isOpen={isMonthlySummaryOpen}
+          setIsOpen={setIsMonthlySummaryOpen}
+          month={currentMonth}
         />
       </main>
       {isTimerVisible && <TimerScreen onStop={handleTimerStop} />}
