@@ -40,18 +40,20 @@ export function TimerScreen({ onStop }: TimerScreenProps) {
       className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/90 backdrop-blur-sm cursor-pointer"
       onClick={() => onStop(startTimeRef.current, elapsedTime, edgeCount)}
     >
-      <Button
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[150px] w-48 h-48 rounded-full text-4xl font-bold"
-        variant="outline"
-        onClick={handleEdgeClick}
-      >
-        EDGE
-      </Button>
-      <div className="text-8xl font-bold font-mono text-primary tabular-nums">
-        {formatTime(elapsedTime)}
+      <div className="relative w-full h-full flex flex-col items-center justify-center">
+        <Button
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[150px] w-48 h-48 rounded-full text-4xl font-bold"
+          variant="outline"
+          onClick={handleEdgeClick}
+        >
+          EDGE
+        </Button>
+        <div className="text-8xl font-bold font-mono text-primary tabular-nums">
+          {formatTime(elapsedTime)}
+        </div>
+        <p className="mt-4 text-lg text-muted-foreground">Click anywhere to stop</p>
+        {edgeCount > 0 && <p className="mt-2 text-2xl font-bold text-accent-foreground">{edgeCount}</p>}
       </div>
-      <p className="mt-4 text-lg text-muted-foreground">Click anywhere to stop</p>
-      {edgeCount > 0 && <p className="mt-2 text-2xl font-bold text-accent-foreground">{edgeCount}</p>}
     </div>
   );
 }
