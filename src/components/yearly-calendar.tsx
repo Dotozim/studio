@@ -23,7 +23,7 @@ export function YearlyCalendar({ year, onDateSelect, onDateDoubleClick, onMonthS
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {months.map((month) => (
           <Card key={month.toString()} className="shadow-lg">
-            <button
+             <button
               className="text-lg font-medium font-headline text-center w-full cursor-pointer hover:bg-accent rounded-t-lg p-2"
               onClick={() => onMonthSelect(month)}
             >
