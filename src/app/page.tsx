@@ -14,9 +14,10 @@ import { TimerScreen } from "@/components/timer-screen";
 import { useHabitStore } from "@/lib/store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, ChevronsRightLeft, Upload } from "lucide-react";
+import { Upload } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { LoggedHabit } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 export default function Home() {
   const [currentMonth, setCurrentMonth] = useState<Date | null>(null);
@@ -128,15 +129,6 @@ export default function Home() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setView(view === "month" ? "year" : "month")}
-              className="mt-2"
-            >
-              {view === "month" ? <Calendar/> : <ChevronsRightLeft/>}
-              <span className="ml-2">{view === "month" ? "Year View" : "Month View"}</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
               onClick={() => setIsImportDialogOpen(true)}
               className="mt-2"
             >
@@ -146,9 +138,18 @@ export default function Home() {
           </div>
         </header>
 
+        <h2 
+          className={cn(
+            "text-3xl font-bold text-center mb-8 font-headline",
+            "cursor-pointer hover:text-primary transition-colors"
+          )}
+          onClick={() => setView(view === 'month' ? 'year' : 'month')}
+        >
+          {currentYear}
+        </h2>
+
         {view === "month" ? (
           <>
-            <h2 className="text-3xl font-bold text-center mb-8 font-headline">{currentYear}</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
               <Card className="md:col-span-2 shadow-lg">
                 <CardContent className="p-2 sm:p-4">
