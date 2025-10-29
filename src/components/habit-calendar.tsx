@@ -22,6 +22,7 @@ type HabitCalendarProps = Omit<UICalendarProps, 'mode' | 'onSelect' | 'selected'
 
 export function HabitCalendar({ month, onMonthChange, onDateSelect, onDateDoubleClick, onMonthSelect, disableNav = false, showCaption = true, ...props }: HabitCalendarProps) {
   const entries = useHabitStore((state) => state.entries);
+  const longPressTimer = React.useRef<NodeJS.Timeout | null>(null);
 
   const handleDayClick = (day: Date | undefined) => {
     onDateSelect(day);
@@ -85,7 +86,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onDateDouble
             </div>
           );
         },
-        Day: ({date, displayMonth}) => {
+        Day: ({date, displayMonth, className}) => {
           const habits = daysWithHabits(date);
           const isOutside = date.getMonth() !== displayMonth.getMonth();
           const dayClass = cn({
@@ -97,10 +98,33 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onDateDouble
           if(isOutside) {
             return <div className="text-muted-foreground opacity-50 invisible h-full w-full">{date.getDate()}</div>
           }
+          
+          const handlePointerDown = () => {
+            longPressTimer.current = setTimeout(() => {
+              if (onDateDoubleClick) {
+                onDateDoubleClick(date);
+              }
+            }, 700);
+          };
+
+          const handlePointerUp = () => {
+            if (longPressTimer.current) {
+              clearTimeout(longPressTimer.current);
+            }
+          };
+
+          const handlePointerMove = () => {
+            if (longPressTimer.current) {
+              clearTimeout(longPressTimer.current);
+            }
+          };
 
           return (
             <div
-              className={cn(dayClass, 'h-full w-full')}
+              className={cn(dayClass, 'h-full w-full', className)}
+              onPointerDown={handlePointerDown}
+              onPointerUp={handlePointerUp}
+              onPointerMove={handlePointerMove}
             >
               {date.getDate()}
             </div>
