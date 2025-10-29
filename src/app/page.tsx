@@ -39,7 +39,9 @@ export default function Home() {
   const loadEntries = useHabitStore((state) => state.loadEntries);
 
   useEffect(() => {
-    loadEntries();
+    if (typeof window !== 'undefined') {
+        loadEntries();
+    }
     setCurrentMonth(startOfMonth(new Date()));
   }, [loadEntries]);
   

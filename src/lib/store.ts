@@ -56,11 +56,11 @@ const useHabitStore = create<HabitState>((set, get) => ({
       if (storedEntries) {
         set({ entries: JSON.parse(storedEntries), isLoaded: true });
       } else {
-        set({ isLoaded: true });
+        set({ isLoaded: true, entries: [] });
       }
     } catch (error) {
       console.error("Failed to load entries from localStorage", error);
-      set({ isLoaded: true });
+      set({ isLoaded: true, entries: [] });
     }
   },
   addHabit: (habit) => {
