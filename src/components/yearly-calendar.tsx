@@ -9,7 +9,7 @@ import { Card, CardContent } from "./ui/card";
 type YearlyCalendarProps = {
   year: number;
   onDateSelect: (date: Date | undefined) => void;
-  onDateDoubleClick: (date: Date | undefined) => void;
+  onDateDoubleClick?: (date: Date | undefined) => void;
   onMonthSelect: (date: Date) => void;
 };
 
