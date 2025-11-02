@@ -30,6 +30,12 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Add the experimental block here
+  experimental: {
+    allowedDevOrigins: [
+        'https://*.cluster-udxxdyopu5c7cwhhtg6mmadhvs.cloudworkstations.dev',
+    ],
+  },
 };
 
 export default nextConfig;
