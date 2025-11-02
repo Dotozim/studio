@@ -27,10 +27,13 @@ const timesOfDay: { id: TimeOfDay; label: string }[] = [
 
 const getTimeOfDay = (date: Date): TimeOfDay => {
     const hour = date.getHours();
-    if (hour >= 4 && hour < 8) return 'dawn';
-    if (hour >= 8 && hour < 12) return 'morning';
-    if (hour >= 12 && hour < 18) return 'afternoon';
-    if (hour >= 18 || hour < 4) return 'night';
+    const minutes = date.getMinutes();
+    const time = hour * 100 + minutes; // e.g., 6:01 -> 601, 12:00 -> 1200
+
+    if (time >= 1 && time <= 600) return 'dawn'; // 00:01 to 06:00
+    if (time >= 601 && time <= 1200) return 'morning'; // 06:01 to 12:00
+    if (time >= 1201 && time <= 1800) return 'afternoon'; // 12:01 to 18:00
+    if (time >= 1801 || time === 0) return 'night'; // 18:01 to 00:00
     return 'not-sure';
 }
 
