@@ -12,39 +12,8 @@ interface HabitState {
   isLoaded: boolean;
   addHabit: (habit: Omit<LoggedHabit, 'id'>) => void;
   deleteHabit: (id: string) => void;
+  updateHabit: (id: string, updatedHabit: Partial<Omit<LoggedHabit, 'id'>>) => void;
   loadEntries: () => void;
-}
-
-// This function migrates the old data structure to the new one.
-const migrateData = (oldEntries: OldHabitEntry[]): LoggedHabit[] => {
-    const newEntries: LoggedHabit[] = [];
-    let idCounter = 0;
-
-    oldEntries.forEach(oldEntry => {
-        const entryDate = parseISO(oldEntry.date);
-
-        // Migrate habits
-        for (const habitName in oldEntry.habits) {
-            const habitTimes = oldEntry.habits[habitName as Habit];
-            if (habitTimes) {
-                for (const time in habitTimes) {
-                    const timeData = habitTimes[time as TimeOfDay];
-                    if (timeData) {
-                        for (let i = 0; i < timeData.count; i++) {
-                            newEntries.push({
-                                id: `migrated-${idCounter++}`,
-                                type: habitName as Habit,
-                                startTime: new Date().toISOString(),
-                                duration: (timeData.duration || 0) / timeData.count,
-                            });
-                        }
-                    }
-                }
-            }
-        }
-    });
-
-    return newEntries;
 }
 
 const useHabitStore = create<HabitState>((set, get) => ({
@@ -89,6 +58,21 @@ const useHabitStore = create<HabitState>((set, get) => ({
             }
         })
     );
+  },
+  updateHabit: (id, updatedHabit) => {
+    set(
+      produce((state: HabitState) => {
+        const index = state.entries.findIndex(e => e.id === id);
+        if (index !== -1) {
+          state.entries[index] = { ...state.entries[index], ...updatedHabit };
+          try {
+            localStorage.setItem(HABIT_STORAGE_KEY, JSON.stringify(state.entries));
+          } catch (error) {
+            console.error("Failed to save entries to localStorage", error);
+          }
+        }
+      })
+    )
   }
 }));
 
