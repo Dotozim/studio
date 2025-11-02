@@ -144,7 +144,7 @@ export function HourlyViewDialog({ isOpen, setIsOpen, date, entries }: HourlyVie
                                     }
 
                                     return (
-                                        <div key={entry.id} className={`group relative flex items-center text-sm p-2 rounded-lg border ${getHabitColor(entry.type)}`}>
+                                        <div key={entry.id} className={`group relative flex items-center justify-between text-sm p-2 rounded-lg border ${getHabitColor(entry.type)}`}>
                                             <div className="flex items-center flex-grow min-w-0">
                                                 <HabitIcon type={entry.type} />
                                                 <div className="flex flex-col sm:flex-row sm:items-center gap-x-2">
@@ -155,33 +155,33 @@ export function HourlyViewDialog({ isOpen, setIsOpen, date, entries }: HourlyVie
                                                   </span>
                                                 </div>
                                             </div>
-                                            <div className="ml-auto flex items-center gap-2 pl-2">
+                                            <div className="flex items-center gap-2 pl-2 shrink-0">
                                                 {entry.edgeCount && entry.edgeCount > 0 && (
                                                     <Badge variant="outline" className="text-xs">{entry.edgeCount} edge{entry.edgeCount > 1 ? 's' : ''}</Badge>
                                                 )}
                                                 {entry.duration > 0 && (
                                                     <Badge variant="secondary">{formatDuration(entry.duration)}</Badge>
                                                 )}
-                                            </div>
-                                            <div className="absolute top-1/2 right-1 -translate-y-1/2 flex opacity-0 group-hover:opacity-100 transition-opacity">
-                                              <Button
-                                                  variant="ghost"
-                                                  size="icon"
-                                                  className="h-7 w-7"
-                                                  onClick={() => setEditingEntryId(entry.id)}
-                                              >
-                                                  <Pencil className="h-4 w-4" />
-                                                  <span className="sr-only">Edit entry</span>
-                                              </Button>
-                                              <Button
-                                                  variant="ghost"
-                                                  size="icon"
-                                                  className="h-7 w-7"
-                                                  onClick={() => deleteHabit(entry.id)}
-                                              >
-                                                  <X className="h-4 w-4" />
-                                                  <span className="sr-only">Delete entry</span>
-                                              </Button>
+                                                <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
+                                                  <Button
+                                                      variant="ghost"
+                                                      size="icon"
+                                                      className="h-7 w-7"
+                                                      onClick={() => setEditingEntryId(entry.id)}
+                                                  >
+                                                      <Pencil className="h-4 w-4" />
+                                                      <span className="sr-only">Edit entry</span>
+                                                  </Button>
+                                                  <Button
+                                                      variant="ghost"
+                                                      size="icon"
+                                                      className="h-7 w-7"
+                                                      onClick={() => deleteHabit(entry.id)}
+                                                  >
+                                                      <X className="h-4 w-4" />
+                                                      <span className="sr-only">Delete entry</span>
+                                                  </Button>
+                                                </div>
                                             </div>
                                         </div>
                                     )
@@ -197,3 +197,5 @@ export function HourlyViewDialog({ isOpen, setIsOpen, date, entries }: HourlyVie
     </Dialog>
   );
 }
+
+    
