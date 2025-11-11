@@ -23,17 +23,11 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
       {
-        protocol: 'https',
+        protocol: 'https' as const,
         hostname: 'picsum.photos',
         port: '',
         pathname: '/**',
       },
-    ],
-  },
-  // Add the experimental block here
-  experimental: {
-    allowedDevOrigins: [
-        'https://*.cluster-udxxdyopu5c7cwhhtg6mmadhvs.cloudworkstations.dev',
     ],
   },
 };
