@@ -22,11 +22,6 @@ type HabitCalendarProps = Omit<UICalendarProps, 'mode' | 'onSelect' | 'selected'
 
 export function HabitCalendar({ month, onMonthChange, onDateSelect, onDateDoubleClick, onMonthSelect, disableNav = false, showCaption = true, ...props }: HabitCalendarProps) {
   const entries = useHabitStore((state) => state.entries);
-  const longPressTimer = React.useRef<NodeJS.Timeout | null>(null);
-
-  const handleDayClick = (day: Date | undefined) => {
-    onDateSelect(day);
-  }
 
   const getDaysForHabit = (habit: HabitType) =>
     entries
@@ -44,7 +39,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onDateDouble
   return (
     <UICalendar
       mode="single"
-      onDayClick={handleDayClick}
+      onDayClick={onDateSelect}
       onDayDoubleClick={onDateDoubleClick}
       month={month}
       onMonthChange={onMonthChange}
@@ -87,6 +82,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onDateDouble
           );
         },
         Day: ({date, displayMonth, className}) => {
+          const longPressTimer = React.useRef<NodeJS.Timeout | null>(null);
           const habits = daysWithHabits(date);
           const isOutside = date.getMonth() !== displayMonth.getMonth();
           const dayClass = cn({
@@ -145,7 +141,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onDateDouble
         row: "flex w-full mt-2 justify-around",
         day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100 rounded-md relative",
         day_selected:"bg-primary/20 text-primary-foreground hover:bg-primary/30",
-        day_today: "bg-accent text-accent-foreground",
+        day_today: "bg-primary text-primary-foreground",
         day_outside: "text-muted-foreground opacity-50 invisible",
         day_inner: "flex items-center justify-center h-full w-full",
       }}
