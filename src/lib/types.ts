@@ -31,4 +31,5 @@ export interface LoggedHabit {
   duration: number; // in seconds
   partners?: string[]; // for social habits
   edgeCount?: number;
+  notes?: string;
 }

@@ -116,7 +116,7 @@ export default function Home() {
                    <Skeleton className="h-16 w-full" />
                    <Skeleton className="h-16 w-full" />
                    <Skeleton className="h-16 w-full" />
-                </CardContent>
+                </Content>
               </Card>
             </div>
           </div>

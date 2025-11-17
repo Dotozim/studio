@@ -14,11 +14,12 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { LoggedHabit, HabitType } from "@/lib/types";
 import { format, parseISO, setHours, setMinutes } from "date-fns";
-import { BookHeart, Leaf, Users, X, Pencil, Save, Ban } from "lucide-react";
+import { BookHeart, Leaf, Users, X, Pencil, Save, Ban, Notebook } from "lucide-react";
 import { useHabitStore } from "@/lib/store";
 import { formatDuration } from "@/lib/utils";
 import { Input } from "./ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { NotesDialog } from "./notes-dialog";
 
 type HourlyViewDialogProps = {
   isOpen: boolean;
@@ -109,12 +110,18 @@ const EntryEditor = ({ entry, onSave, onCancel }: { entry: LoggedHabit, onSave: 
 export function HourlyViewDialog({ isOpen, setIsOpen, date, entries }: HourlyViewDialogProps) {
   const { deleteHabit, updateHabit } = useHabitStore();
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
+  const [notesEntry, setNotesEntry] = useState<LoggedHabit | null>(null);
 
   const sortedEntries = entries.sort((a, b) => parseISO(a.startTime).getTime() - parseISO(b.startTime).getTime());
     
   const handleSave = (id: string, updatedEntry: Partial<LoggedHabit>) => {
     updateHabit(id, updatedEntry);
     setEditingEntryId(null);
+  };
+  
+  const handleNotesSave = (id: string, notes: string) => {
+    updateHabit(id, { notes: notes });
+    setNotesEntry(null);
   };
 
 
@@ -144,25 +151,36 @@ export function HourlyViewDialog({ isOpen, setIsOpen, date, entries }: HourlyVie
                                     }
 
                                     return (
-                                        <div key={entry.id} className={`group relative flex items-center justify-between text-sm p-2 rounded-lg border ${getHabitColor(entry.type)}`}>
-                                            <div className="flex items-center flex-grow min-w-0">
-                                                <HabitIcon type={entry.type} />
-                                                <div className="flex flex-col sm:flex-row sm:items-center gap-x-2">
-                                                  <span className="font-semibold">{format(parseISO(entry.startTime), 'HH:mm')}</span>
-                                                  <span className="hidden sm:inline mx-2 text-muted-foreground">-</span>
-                                                  <span className="truncate">
-                                                      {entry.type === 'SOCIAL' ? `Social w/ ${entry.partners?.join(', ') || 'friends'}` : entry.type}
-                                                  </span>
+                                        <div key={entry.id} className={`group relative flex flex-col text-sm p-2 rounded-lg border ${getHabitColor(entry.type)}`}>
+                                            <div className="flex items-start justify-between">
+                                                <div className="flex items-center flex-grow min-w-0">
+                                                    <HabitIcon type={entry.type} />
+                                                    <div className="flex flex-col sm:flex-row sm:items-center gap-x-2">
+                                                        <span className="font-semibold">{format(parseISO(entry.startTime), 'HH:mm')}</span>
+                                                        <span className="hidden sm:inline mx-1 text-muted-foreground">-</span>
+                                                        <span className="truncate">
+                                                            {entry.type === 'SOCIAL' ? `Social w/ ${entry.partners?.join(', ') || 'friends'}` : entry.type}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div className="flex items-center gap-2 pl-2 shrink-0">
-                                                {entry.edgeCount && entry.edgeCount > 0 && (
-                                                    <Badge variant="outline" className="text-xs">{entry.edgeCount} edge{entry.edgeCount > 1 ? 's' : ''}</Badge>
-                                                )}
-                                                {entry.duration > 0 && (
-                                                    <Badge variant="secondary">{formatDuration(entry.duration)}</Badge>
-                                                )}
+                                                <div className="flex items-center gap-2 pl-2 shrink-0">
+                                                    {entry.edgeCount && entry.edgeCount > 0 && (
+                                                        <Badge variant="outline" className="text-xs">{entry.edgeCount} edge{entry.edgeCount > 1 ? 's' : ''}</Badge>
+                                                    )}
+                                                    {entry.duration > 0 && (
+                                                        <Badge variant="secondary">{formatDuration(entry.duration)}</Badge>
+                                                    )}
+                                                </div>
                                                 <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
+                                                  <Button
+                                                      variant="ghost"
+                                                      size="icon"
+                                                      className="h-7 w-7"
+                                                      onClick={() => setNotesEntry(entry)}
+                                                  >
+                                                      <Notebook className="h-4 w-4" />
+                                                      <span className="sr-only">Add/Edit Note</span>
+                                                  </Button>
                                                   <Button
                                                       variant="ghost"
                                                       size="icon"
@@ -183,6 +201,9 @@ export function HourlyViewDialog({ isOpen, setIsOpen, date, entries }: HourlyVie
                                                   </Button>
                                                 </div>
                                             </div>
+                                             {entry.notes && (
+                                                <div className="mt-2 pl-6 text-xs text-muted-foreground whitespace-pre-wrap">{entry.notes}</div>
+                                             )}
                                         </div>
                                     )
                                 })
@@ -193,6 +214,14 @@ export function HourlyViewDialog({ isOpen, setIsOpen, date, entries }: HourlyVie
             })}
             </div>
         </ScrollArea>
+        {notesEntry && (
+            <NotesDialog
+                isOpen={!!notesEntry}
+                setIsOpen={(open) => !open && setNotesEntry(null)}
+                entry={notesEntry}
+                onSave={handleNotesSave}
+            />
+        )}
       </DialogContent>
     </Dialog>
   );
