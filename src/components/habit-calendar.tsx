@@ -5,7 +5,7 @@ import * as React from "react";
 import { Calendar as UICalendar, CalendarProps as UICalendarProps } from "@/components/ui/calendar";
 import { useHabitStore } from "@/lib/store";
 import type { HabitType } from "@/lib/types";
-import { parseISO, format, addMonths, subMonths, isSameDay } from "date-fns";
+import { parseISO, format, addMonths, subMonths, startOfDay } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
@@ -23,18 +23,17 @@ type HabitCalendarProps = Omit<UICalendarProps, 'mode' | 'onSelect' | 'selected'
 export function HabitCalendar({ month, onMonthChange, onDateSelect, onDateDoubleClick, onMonthSelect, disableNav = false, showCaption = true, ...props }: HabitCalendarProps) {
   const entries = useHabitStore((state) => state.entries);
 
-  const getDaysForHabit = (habit: HabitType) =>
-    entries
-      .filter((entry) => entry.type === habit)
-      .map((entry) => parseISO(entry.startTime));
-
-  const daysWithHabits = (day: Date): string[] => {
-      const habits: HabitType[] = [];
-      if (getDaysForHabit("BOB").some(d => isSameDay(d, day))) habits.push("BOB");
-      if (getDaysForHabit("FL").some(d => isSameDay(d, day))) habits.push("FL");
-      if (getDaysForHabit("SOCIAL").some(d => isSameDay(d, day))) habits.push("SOCIAL");
-      return habits;
-  }
+  const habitsByDay = React.useMemo(() => {
+    const map = new Map<string, Set<HabitType>>();
+    for (const entry of entries) {
+      const dayKey = format(startOfDay(parseISO(entry.startTime)), "yyyy-MM-dd");
+      if (!map.has(dayKey)) {
+        map.set(dayKey, new Set());
+      }
+      map.get(dayKey)!.add(entry.type);
+    }
+    return map;
+  }, [entries]);
   
   return (
     <UICalendar
@@ -83,13 +82,17 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onDateDouble
         },
         Day: ({date, displayMonth, className}) => {
           const longPressTimer = React.useRef<NodeJS.Timeout | null>(null);
-          const habits = daysWithHabits(date);
-          const isOutside = date.getMonth() !== displayMonth.getMonth();
+          
+          const dayKey = format(date, "yyyy-MM-dd");
+          const habitsForDay = habitsByDay.get(dayKey);
+
           const dayClass = cn({
-            'day-bob': habits.includes('BOB'),
-            'day-fl': habits.includes('FL'),
-            'day-social': habits.includes('SOCIAL'),
+            'day-bob': habitsForDay?.has('BOB'),
+            'day-fl': habitsForDay?.has('FL'),
+            'day-social': habitsForDay?.has('SOCIAL'),
           });
+          
+          const isOutside = date.getMonth() !== displayMonth.getMonth();
           
           if(isOutside) {
             return <div className="text-muted-foreground opacity-50 invisible h-full w-full">{date.getDate()}</div>
