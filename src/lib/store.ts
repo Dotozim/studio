@@ -76,12 +76,6 @@ const useHabitStore = create<HabitState>((set, get) => ({
   }
 }));
 
-// This effect will run once on client mount to load the data
-if (typeof window !== 'undefined') {
-    useHabitStore.getState().loadEntries();
-}
-
-
 // Legacy store for import compatibility - will be removed later
 export const useLegacyHabitStore = create<{
     entries: OldHabitEntry[],
