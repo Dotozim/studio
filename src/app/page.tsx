@@ -20,7 +20,7 @@ import type { LoggedHabit } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export default function Home() {
-  const [currentMonth, setCurrentMonth] = useState<Date | null>(null);
+  const [currentMonth, setCurrentMonth] = useState<Date>(startOfMonth(new Date()));
   const [isHabitDialogOpen, setIsHabitDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [isHourlyViewOpen, setIsHourlyViewOpen] = useState(false);
@@ -39,19 +39,16 @@ export default function Home() {
   const loadEntries = useHabitStore((state) => state.loadEntries);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-        loadEntries();
-    }
-    setCurrentMonth(startOfMonth(new Date()));
+    loadEntries();
   }, [loadEntries]);
   
-  const handleDateSelect = (date: Date | undefined) => {
+  const handleDateSelect = useCallback((date: Date | undefined) => {
     if (date) {
       setTimerData(undefined);
       setSelectedDate(date);
       setIsHabitDialogOpen(true);
     }
-  };
+  }, []);
 
   const handleDateDoubleClick = useCallback((date: Date | undefined) => {
     if (date) {
@@ -62,28 +59,26 @@ export default function Home() {
     }
   }, [allEntries]);
 
-  const handleMonthSelect = (month: Date) => {
+  const handleMonthSelect = useCallback((month: Date) => {
     setCurrentMonth(month);
     setView("month");
-  };
+  }, []);
 
-  const handleTimerStop = (startTime: Date, elapsedTime: number, edgeCount: number) => {
+  const handleTimerStop = useCallback((startTime: Date, elapsedTime: number, edgeCount: number) => {
     setIsTimerVisible(false);
     setTimerData({ startTime: startTime.toISOString(), duration: elapsedTime, edgeCount: edgeCount });
     setSelectedDate(new Date());
     setIsHabitDialogOpen(true);
-  };
+  }, []);
 
-  const handleYearChange = (direction: 'next' | 'prev') => {
-    if (currentMonth) {
-      const newMonth = direction === 'next' ? addYears(currentMonth, 1) : subYears(currentMonth, 1);
-      setCurrentMonth(newMonth);
-    }
-  }
+  const handleYearChange = useCallback((direction: 'next' | 'prev') => {
+    const newMonth = direction === 'next' ? addYears(currentMonth, 1) : subYears(currentMonth, 1);
+    setCurrentMonth(newMonth);
+  }, [currentMonth]);
     
-  const currentYear = currentMonth ? getYear(currentMonth) : new Date().getFullYear();
+  const currentYear = getYear(currentMonth);
 
-  if (!isLoaded || !currentMonth) {
+  if (!isLoaded) {
     return (
       <main className="container mx-auto p-4 sm:p-6 md:p-8">
         <header className="text-center mb-8">
@@ -95,10 +90,9 @@ export default function Home() {
               Track your habits. One day at a time.
             </p>
             <Skeleton className="h-9 w-32 mt-2" />
-            <Skeleton className="h-9 w-28 mt-2" />
           </div>
         </header>
-         <h2 className="text-3xl font-bold text-center mb-8 font-headline">{currentYear}</h2>
+         <h2 className="text-3xl font-bold text-center mb-8 font-headline">{new Date().getFullYear()}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
             <Card className="md:col-span-2 shadow-lg">
               <CardContent className="p-2 sm:p-4">
@@ -160,7 +154,7 @@ export default function Home() {
               "text-3xl font-bold text-center font-headline",
               "cursor-pointer hover:text-primary transition-colors"
             )}
-            onClick={() => setView(view === 'month' ? 'year' : 'month')}
+            onClick={() => setView(v => v === 'month' ? 'year' : 'month')}
           >
             {currentYear}
           </h2>
@@ -172,24 +166,22 @@ export default function Home() {
 
 
         {view === "month" ? (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-              <Card className="md:col-span-2 shadow-lg">
-                <CardContent className="p-2 sm:p-4">
-                  <HabitCalendar
-                    month={currentMonth}
-                    onMonthChange={setCurrentMonth}
-                    onDateSelect={handleDateSelect}
-                    onDateDoubleClick={handleDateDoubleClick}
-                    onMonthSelect={() => setIsMonthlyHourlySummaryOpen(true)}
-                  />
-                </CardContent>
-              </Card>
-              <div className="md:col-span-1">
-                <MonthlySummary month={currentMonth} />
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+            <Card className="md:col-span-2 shadow-lg">
+              <CardContent className="p-2 sm:p-4">
+                <HabitCalendar
+                  month={currentMonth}
+                  onMonthChange={setCurrentMonth}
+                  onDateSelect={handleDateSelect}
+                  onDateDoubleClick={handleDateDoubleClick}
+                  onMonthSelect={() => setIsMonthlyHourlySummaryOpen(true)}
+                />
+              </CardContent>
+            </Card>
+            <div className="md:col-span-1">
+              <MonthlySummary month={currentMonth} />
             </div>
-          </>
+          </div>
         ) : (
           <YearlyCalendar year={currentYear} onDateSelect={handleDateSelect} onDateDoubleClick={handleDateDoubleClick} onMonthSelect={handleMonthSelect} />
         )}
