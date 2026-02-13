@@ -20,7 +20,7 @@ import type { LoggedHabit } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export default function Home() {
-  const [currentMonth, setCurrentMonth] = useState<Date>(startOfMonth(new Date()));
+  const [currentMonth, setCurrentMonth] = useState<Date | undefined>(undefined);
   const [isHabitDialogOpen, setIsHabitDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [isHourlyViewOpen, setIsHourlyViewOpen] = useState(false);
@@ -40,6 +40,7 @@ export default function Home() {
 
   useEffect(() => {
     loadEntries();
+    setCurrentMonth(startOfMonth(new Date()));
   }, [loadEntries]);
   
   const handleDateSelect = useCallback((date: Date | undefined) => {
@@ -72,13 +73,13 @@ export default function Home() {
   }, []);
 
   const handleYearChange = useCallback((direction: 'next' | 'prev') => {
-    const newMonth = direction === 'next' ? addYears(currentMonth, 1) : subYears(currentMonth, 1);
-    setCurrentMonth(newMonth);
+    if (currentMonth) {
+      const newMonth = direction === 'next' ? addYears(currentMonth, 1) : subYears(currentMonth, 1);
+      setCurrentMonth(newMonth);
+    }
   }, [currentMonth]);
     
-  const currentYear = getYear(currentMonth);
-
-  if (!isLoaded) {
+  if (!isLoaded || !currentMonth) {
     return (
       <main className="container mx-auto p-4 sm:p-6 md:p-8">
         <header className="text-center mb-8">
@@ -117,6 +118,8 @@ export default function Home() {
       </main>
     );
   }
+
+  const currentYear = getYear(currentMonth);
 
   return (
     <>
