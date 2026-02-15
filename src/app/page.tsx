@@ -93,7 +93,6 @@ export default function Home() {
             <Skeleton className="h-9 w-32 mt-2" />
           </div>
         </header>
-         <h2 className="text-3xl font-bold text-center mb-8 font-headline">{new Date().getFullYear()}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
             <Card className="md:col-span-2 shadow-lg">
               <CardContent className="p-2 sm:p-4">
