@@ -21,19 +21,7 @@ type HabitCalendarProps = Omit<UICalendarProps, 'mode' | 'onSelect' | 'selected'
 };
 
 export function HabitCalendar({ month, onMonthChange, onDateSelect, onDateDoubleClick, onMonthSelect, disableNav = false, showCaption = true, ...props }: HabitCalendarProps) {
-  const entries = useHabitStore((state) => state.entries);
-
-  const habitsByDay = React.useMemo(() => {
-    const map = new Map<string, Set<HabitType>>();
-    for (const entry of entries) {
-      const dayKey = format(startOfDay(parseISO(entry.startTime)), "yyyy-MM-dd");
-      if (!map.has(dayKey)) {
-        map.set(dayKey, new Set());
-      }
-      map.get(dayKey)!.add(entry.type);
-    }
-    return map;
-  }, [entries]);
+  const habitsByDay = useHabitStore((state) => state.habitsByDay);
   
   return (
     <UICalendar
