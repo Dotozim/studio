@@ -41,7 +41,7 @@ export default function Home() {
   useEffect(() => {
     loadEntries();
     setCurrentMonth(startOfMonth(new Date()));
-  }, [loadEntries]);
+  }, []);
   
   const handleDateSelect = useCallback((date: Date | undefined) => {
     if (date) {
