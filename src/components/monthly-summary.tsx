@@ -1,6 +1,7 @@
 
 "use client";
 
+import * as React from "react";
 import { isSameMonth, format, parseISO } from "date-fns";
 import {
   Card,
@@ -16,6 +17,13 @@ import { formatDuration } from "@/lib/utils";
 
 type MonthlySummaryProps = {
   month: Date;
+};
+
+type HabitStats = {
+  total: number;
+  duration: number;
+  edgeCount: number;
+  byTime: { [key in TimeOfDay]?: { count: number; duration: number; edgeCount: number; } };
 };
 
 const timesOfDay: { id: TimeOfDay; label: string }[] = [
@@ -37,22 +45,9 @@ const getTimeOfDay = (date: Date): TimeOfDay => {
     return 'not-sure';
 }
 
-export function MonthlySummary({ month }: MonthlySummaryProps) {
-  const allEntries = useHabitStore((state) => state.entries);
-
-  const monthlyEntries = allEntries.filter((entry) =>
-    isSameMonth(parseISO(entry.startTime), month)
-  );
-
-  type HabitStats = {
-    total: number;
-    duration: number;
-    edgeCount: number;
-    byTime: { [key in TimeOfDay]?: { count: number; duration: number; edgeCount: number; } };
-  };
-
-  const calculateStats = (entries: LoggedHabit[]): HabitStats => {
-    return entries.reduce((acc, e) => {
+const calculateStats = (entries: LoggedHabit[]): HabitStats => {
+  return entries.reduce((acc, e) => {
+      try {
         const timeOfDay = getTimeOfDay(parseISO(e.startTime));
         acc.total += 1;
         acc.duration += e.duration;
@@ -65,70 +60,99 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
             acc.byTime[timeOfDay]!.duration += e.duration;
             acc.byTime[timeOfDay]!.edgeCount += e.edgeCount || 0;
         }
-        return acc;
-    }, { total: 0, duration: 0, edgeCount: 0, byTime: {} });
-  }
-  
-  const bobStats = calculateStats(monthlyEntries.filter(e => e.type === 'BOB'));
-  const flStats = calculateStats(monthlyEntries.filter(e => e.type === 'FL'));
-  const socialStats = calculateStats(monthlyEntries.filter(e => e.type === 'SOCIAL'));
-  
-  const partnerCounts = monthlyEntries
-    .filter(e => e.type === 'SOCIAL' && e.partners)
-    .flatMap(e => e.partners!)
-    .reduce((acc, partnerName) => {
-        const pName = partnerName.trim();
-        if (pName) {
-            acc[pName] = (acc[pName] || 0) + 1;
-        }
-        return acc;
-    }, {} as Record<string, number>);
+      } catch (err) {
+        // Ignore entries with invalid dates
+      }
+      return acc;
+  }, { total: 0, duration: 0, edgeCount: 0, byTime: {} });
+}
 
-  
-  const total = bobStats.total + flStats.total + socialStats.total;
-  const totalDuration = bobStats.duration + flStats.duration + socialStats.duration;
-  const totalEdgeCount = bobStats.edgeCount + flStats.edgeCount + socialStats.edgeCount;
-
-  const totalCountsByTime = timesOfDay.reduce((acc, time) => {
-    const timeId = time.id as TimeOfDay;
-    const bobTime = bobStats.byTime[timeId] || { count: 0, duration: 0, edgeCount: 0 };
-    const flTime = flStats.byTime[timeId] || { count: 0, duration: 0, edgeCount: 0 };
-    const socialTime = socialStats.byTime[timeId] || { count: 0, duration: 0, edgeCount: 0 };
-    
-    const timeTotalCount = bobTime.count + flTime.count + socialTime.count;
-    const timeTotalDuration = bobTime.duration + flTime.duration + socialTime.duration;
-    const timeTotalEdgeCount = bobTime.edgeCount + flTime.edgeCount + socialTime.edgeCount;
-
-    if (timeTotalCount > 0) {
-      acc[timeId] = { count: timeTotalCount, duration: timeTotalDuration, edgeCount: timeTotalEdgeCount };
-    }
-    return acc;
-  }, {} as { [key in TimeOfDay]?: {count: number, duration: number, edgeCount: number} });
-
-  const HabitSummary = ({ habit, counts, colorClass }: { habit: string, counts: HabitStats, colorClass: string }) => (
-    <div className={`p-3 rounded-lg ${colorClass} text-card-foreground`}>
-      <div className="flex justify-between items-center">
-        <span className="font-medium">{habit}</span>
-        <div className="text-right">
-            <span className="font-semibold">{counts.total}</span>
-        </div>
-      </div>
-       <div className="text-xs text-card-foreground/80 mt-1 space-y-0.5">
-        {timesOfDay.map(time => (
-            counts.byTime[time.id] && counts.byTime[time.id]!.count > 0 ? (
-                <div key={time.id} className="flex justify-between">
-                    <span>{time.label}</span>
-                    <div className="text-right space-x-2">
-                        {counts.byTime[time.id]!.edgeCount > 0 && <span className="text-card-foreground/70">{counts.byTime[time.id]!.edgeCount} edges</span>}
-                        {counts.byTime[time.id]!.duration > 0 && <span className="text-card-foreground/70">({formatDuration(counts.byTime[time.id]!.duration)})</span>}
-                        <span>{counts.byTime[time.id]!.count}</span>
-                    </div>
-                </div>
-            ) : null
-        ))}
+const HabitSummary = ({ habit, counts, colorClass }: { habit: string, counts: HabitStats, colorClass: string }) => (
+  <div className={`p-3 rounded-lg ${colorClass} text-card-foreground`}>
+    <div className="flex justify-between items-center">
+      <span className="font-medium">{habit}</span>
+      <div className="text-right">
+          <span className="font-semibold">{counts.total}</span>
       </div>
     </div>
-  );
+     <div className="text-xs text-card-foreground/80 mt-1 space-y-0.5">
+      {timesOfDay.map(time => (
+          counts.byTime[time.id] && counts.byTime[time.id]!.count > 0 ? (
+              <div key={time.id} className="flex justify-between">
+                  <span>{time.label}</span>
+                  <div className="text-right space-x-2">
+                      {counts.byTime[time.id]!.edgeCount > 0 && <span className="text-card-foreground/70">{counts.byTime[time.id]!.edgeCount} edges</span>}
+                      {counts.byTime[time.id]!.duration > 0 && <span className="text-card-foreground/70">({formatDuration(counts.byTime[time.id]!.duration)})</span>}
+                      <span>{counts.byTime[time.id]!.count}</span>
+                  </div>
+              </div>
+          ) : null
+      ))}
+    </div>
+  </div>
+);
+
+
+export function MonthlySummary({ month }: MonthlySummaryProps) {
+  const allEntries = useHabitStore((state) => state.entries);
+
+  const {
+    bobStats,
+    flStats,
+    socialStats,
+    partnerCounts,
+    total,
+    totalDuration,
+    totalEdgeCount,
+    totalCountsByTime,
+  } = React.useMemo(() => {
+    const monthlyEntries = allEntries.filter((entry) => {
+      try {
+        return isSameMonth(parseISO(entry.startTime), month);
+      } catch (e) {
+        return false;
+      }
+    });
+    
+    const bobStats = calculateStats(monthlyEntries.filter(e => e.type === 'BOB'));
+    const flStats = calculateStats(monthlyEntries.filter(e => e.type === 'FL'));
+    const socialStats = calculateStats(monthlyEntries.filter(e => e.type === 'SOCIAL'));
+    
+    const partnerCounts = monthlyEntries
+      .filter(e => e.type === 'SOCIAL' && e.partners)
+      .flatMap(e => e.partners!)
+      .reduce((acc, partnerName) => {
+          const pName = partnerName.trim();
+          if (pName) {
+              acc[pName] = (acc[pName] || 0) + 1;
+          }
+          return acc;
+      }, {} as Record<string, number>);
+
+    
+    const total = bobStats.total + flStats.total + socialStats.total;
+    const totalDuration = bobStats.duration + flStats.duration + socialStats.duration;
+    const totalEdgeCount = bobStats.edgeCount + flStats.edgeCount + socialStats.edgeCount;
+
+    const totalCountsByTime = timesOfDay.reduce((acc, time) => {
+      const timeId = time.id as TimeOfDay;
+      const bobTime = bobStats.byTime[timeId] || { count: 0, duration: 0, edgeCount: 0 };
+      const flTime = flStats.byTime[timeId] || { count: 0, duration: 0, edgeCount: 0 };
+      const socialTime = socialStats.byTime[timeId] || { count: 0, duration: 0, edgeCount: 0 };
+      
+      const timeTotalCount = bobTime.count + flTime.count + socialTime.count;
+      const timeTotalDuration = bobTime.duration + flTime.duration + socialTime.duration;
+      const timeTotalEdgeCount = bobTime.edgeCount + flTime.edgeCount + socialTime.edgeCount;
+
+      if (timeTotalCount > 0) {
+        acc[timeId] = { count: timeTotalCount, duration: timeTotalDuration, edgeCount: timeTotalEdgeCount };
+      }
+      return acc;
+    }, {} as { [key in TimeOfDay]?: {count: number, duration: number, edgeCount: number} });
+
+    return { bobStats, flStats, socialStats, partnerCounts, total, totalDuration, totalEdgeCount, totalCountsByTime };
+  }, [allEntries, month]);
+
 
   return (
     <Card className="shadow-lg">
