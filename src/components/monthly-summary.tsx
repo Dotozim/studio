@@ -72,7 +72,7 @@ const HabitSummary = ({ habit, counts, colorClass }: { habit: string, counts: Ha
 
 
 export function MonthlySummary({ month }: MonthlySummaryProps) {
-  const allEntries = useHabitStore((state) => state.entries);
+  const entriesByMonth = useHabitStore((state) => state.entriesByMonth);
 
   const {
     bobStats,
@@ -92,14 +92,9 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
       SOCIAL: JSON.parse(JSON.stringify(initialStats)),
     };
     const partnerCounts: Record<string, number> = {};
-
-    const monthlyEntries = allEntries.filter((entry) => {
-      try {
-        return isSameMonth(parseISO(entry.startTime), month);
-      } catch (e) {
-        return false;
-      }
-    });
+    
+    const monthKey = format(month, "yyyy-MM");
+    const monthlyEntries = entriesByMonth.get(monthKey) || [];
 
     for (const entry of monthlyEntries) {
         try {
@@ -153,7 +148,7 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
     }, {} as { [key in TimeOfDay]?: {count: number, duration: number, edgeCount: number} });
 
     return { bobStats: stats.BOB, flStats: stats.FL, socialStats: stats.SOCIAL, partnerCounts, total, totalDuration, totalEdgeCount, totalCountsByTime };
-  }, [allEntries, month]);
+  }, [entriesByMonth, month]);
 
 
   return (
