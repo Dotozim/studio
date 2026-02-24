@@ -72,7 +72,7 @@ const HabitSummary = ({ habit, counts, colorClass }: { habit: string, counts: Ha
 
 
 export function MonthlySummary({ month }: MonthlySummaryProps) {
-  const entriesByMonth = useHabitStore((state) => state.entriesByMonth);
+  const allEntries = useHabitStore((state) => state.entries);
 
   const {
     bobStats,
@@ -85,19 +85,20 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
     totalCountsByTime,
   } = React.useMemo(() => {
     const initialStats: HabitStats = { total: 0, duration: 0, edgeCount: 0, byTime: {} };
-    // Deep copy to avoid mutation issues across memoization
     const stats: Record<HabitType, HabitStats> = {
-      BOB: JSON.parse(JSON.stringify(initialStats)),
-      FL: JSON.parse(JSON.stringify(initialStats)),
-      SOCIAL: JSON.parse(JSON.stringify(initialStats)),
+      BOB: { total: 0, duration: 0, edgeCount: 0, byTime: {} },
+      FL: { total: 0, duration: 0, edgeCount: 0, byTime: {} },
+      SOCIAL: { total: 0, duration: 0, edgeCount: 0, byTime: {} },
     };
     const partnerCounts: Record<string, number> = {};
     
-    const monthKey = format(month, "yyyy-MM");
-    const monthlyEntries = entriesByMonth.get(monthKey) || [];
-
-    for (const entry of monthlyEntries) {
+    for (const entry of allEntries) {
         try {
+            const entryDate = parseISO(entry.startTime);
+            if (!isSameMonth(entryDate, month)) {
+                continue;
+            }
+
             const type = entry.type;
             const habitStat = stats[type];
             if (!habitStat) continue;
@@ -106,7 +107,7 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
             habitStat.duration += entry.duration || 0;
             habitStat.edgeCount += entry.edgeCount || 0;
 
-            const timeOfDay = getTimeOfDay(parseISO(entry.startTime));
+            const timeOfDay = getTimeOfDay(entryDate);
             if (timeOfDay !== 'not-sure') {
                 if (!habitStat.byTime[timeOfDay]) {
                     habitStat.byTime[timeOfDay] = { count: 0, duration: 0, edgeCount: 0 };
@@ -148,7 +149,7 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
     }, {} as { [key in TimeOfDay]?: {count: number, duration: number, edgeCount: number} });
 
     return { bobStats: stats.BOB, flStats: stats.FL, socialStats: stats.SOCIAL, partnerCounts, total, totalDuration, totalEdgeCount, totalCountsByTime };
-  }, [entriesByMonth, month]);
+  }, [allEntries, month]);
 
 
   return (
