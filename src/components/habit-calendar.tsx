@@ -68,7 +68,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onDateDouble
             </div>
           );
         },
-        Day: ({date, displayMonth, className}) => {
+        Day: ({date, displayMonth, className, ...dayProps}) => {
           const longPressTimer = React.useRef<NodeJS.Timeout | null>(null);
           
           const dayKey = format(date, "yyyy-MM-dd");
@@ -112,6 +112,7 @@ export function HabitCalendar({ month, onMonthChange, onDateSelect, onDateDouble
               onPointerDown={handlePointerDown}
               onPointerUp={handlePointerUp}
               onPointerMove={handlePointerMove}
+              onDoubleClick={(dayProps as any).onDoubleClick}
             >
               {date.getDate()}
             </div>
