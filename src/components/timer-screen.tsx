@@ -37,14 +37,14 @@ export function TimerScreen({ onStop }: TimerScreenProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/90 backdrop-blur-sm cursor-pointer"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/90 backdrop-blur-sm cursor-pointer p-4"
       onClick={() => onStop(startTimeRef.current, elapsedTime, edgeCount)}
     >
-      <div className="flex flex-col items-center justify-center gap-8">
+      <div className="flex flex-col items-center justify-center gap-4 md:gap-8">
         <div className="text-center">
-            <p className="mb-4 text-4xl font-bold text-destructive">{edgeCount}</p>
+            <p className="mb-2 md:mb-4 text-3xl md:text-4xl font-bold text-destructive">{edgeCount}</p>
             <Button
-                className="w-48 h-48 rounded-full text-4xl font-bold"
+                className="w-36 h-36 md:w-48 md:h-48 rounded-full text-3xl md:text-4xl font-bold"
                 variant="outline"
                 onClick={handleEdgeClick}
                 >
@@ -52,10 +52,10 @@ export function TimerScreen({ onStop }: TimerScreenProps) {
             </Button>
         </div>
         <div className="text-center">
-            <div className="text-8xl font-bold font-mono text-primary tabular-nums">
+            <div className="text-6xl md:text-8xl font-bold font-mono text-primary tabular-nums">
             {formatTime(elapsedTime)}
             </div>
-            <p className="mt-4 text-lg text-muted-foreground">Click anywhere to stop</p>
+            <p className="mt-2 md:mt-4 text-base md:text-lg text-muted-foreground">Click anywhere to stop</p>
         </div>
       </div>
     </div>
