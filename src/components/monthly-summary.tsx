@@ -45,28 +45,6 @@ const getTimeOfDay = (date: Date): TimeOfDay => {
     return 'not-sure';
 }
 
-const calculateStats = (entries: LoggedHabit[]): HabitStats => {
-  return entries.reduce((acc, e) => {
-      try {
-        const timeOfDay = getTimeOfDay(parseISO(e.startTime));
-        acc.total += 1;
-        acc.duration += e.duration;
-        acc.edgeCount += e.edgeCount || 0;
-        if (timeOfDay !== 'not-sure') {
-            if (!acc.byTime[timeOfDay]) {
-                acc.byTime[timeOfDay] = { count: 0, duration: 0, edgeCount: 0 };
-            }
-            acc.byTime[timeOfDay]!.count += 1;
-            acc.byTime[timeOfDay]!.duration += e.duration;
-            acc.byTime[timeOfDay]!.edgeCount += e.edgeCount || 0;
-        }
-      } catch (err) {
-        // Ignore entries with invalid dates
-      }
-      return acc;
-  }, { total: 0, duration: 0, edgeCount: 0, byTime: {} });
-}
-
 const HabitSummary = ({ habit, counts, colorClass }: { habit: string, counts: HabitStats, colorClass: string }) => (
   <div className={`p-3 rounded-lg ${colorClass} text-card-foreground`}>
     <div className="flex justify-between items-center">
@@ -106,6 +84,15 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
     totalEdgeCount,
     totalCountsByTime,
   } = React.useMemo(() => {
+    const initialStats: HabitStats = { total: 0, duration: 0, edgeCount: 0, byTime: {} };
+    // Deep copy to avoid mutation issues across memoization
+    const stats: Record<HabitType, HabitStats> = {
+      BOB: JSON.parse(JSON.stringify(initialStats)),
+      FL: JSON.parse(JSON.stringify(initialStats)),
+      SOCIAL: JSON.parse(JSON.stringify(initialStats)),
+    };
+    const partnerCounts: Record<string, number> = {};
+
     const monthlyEntries = allEntries.filter((entry) => {
       try {
         return isSameMonth(parseISO(entry.startTime), month);
@@ -113,44 +100,59 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
         return false;
       }
     });
-    
-    const bobStats = calculateStats(monthlyEntries.filter(e => e.type === 'BOB'));
-    const flStats = calculateStats(monthlyEntries.filter(e => e.type === 'FL'));
-    const socialStats = calculateStats(monthlyEntries.filter(e => e.type === 'SOCIAL'));
-    
-    const partnerCounts = monthlyEntries
-      .filter(e => e.type === 'SOCIAL' && e.partners)
-      .flatMap(e => e.partners!)
-      .reduce((acc, partnerName) => {
-          const pName = partnerName.trim();
-          if (pName) {
-              acc[pName] = (acc[pName] || 0) + 1;
-          }
-          return acc;
-      }, {} as Record<string, number>);
 
-    
-    const total = bobStats.total + flStats.total + socialStats.total;
-    const totalDuration = bobStats.duration + flStats.duration + socialStats.duration;
-    const totalEdgeCount = bobStats.edgeCount + flStats.edgeCount + socialStats.edgeCount;
+    for (const entry of monthlyEntries) {
+        try {
+            const type = entry.type;
+            const habitStat = stats[type];
+            if (!habitStat) continue;
+
+            habitStat.total++;
+            habitStat.duration += entry.duration || 0;
+            habitStat.edgeCount += entry.edgeCount || 0;
+
+            const timeOfDay = getTimeOfDay(parseISO(entry.startTime));
+            if (timeOfDay !== 'not-sure') {
+                if (!habitStat.byTime[timeOfDay]) {
+                    habitStat.byTime[timeOfDay] = { count: 0, duration: 0, edgeCount: 0 };
+                }
+                const timeStat = habitStat.byTime[timeOfDay]!;
+                timeStat.count++;
+                timeStat.duration += entry.duration || 0;
+                timeStat.edgeCount += entry.edgeCount || 0;
+            }
+
+            if (type === 'SOCIAL' && entry.partners) {
+                for (const partner of entry.partners) {
+                    const pName = partner.trim();
+                    if (pName) {
+                        partnerCounts[pName] = (partnerCounts[pName] || 0) + 1;
+                    }
+                }
+            }
+        } catch(e) {
+            // Ignore entries with invalid dates
+        }
+    }
+
+    const total = stats.BOB.total + stats.FL.total + stats.SOCIAL.total;
+    const totalDuration = stats.BOB.duration + stats.FL.duration + stats.SOCIAL.duration;
+    const totalEdgeCount = stats.BOB.edgeCount + stats.FL.edgeCount + stats.SOCIAL.edgeCount;
 
     const totalCountsByTime = timesOfDay.reduce((acc, time) => {
-      const timeId = time.id as TimeOfDay;
-      const bobTime = bobStats.byTime[timeId] || { count: 0, duration: 0, edgeCount: 0 };
-      const flTime = flStats.byTime[timeId] || { count: 0, duration: 0, edgeCount: 0 };
-      const socialTime = socialStats.byTime[timeId] || { count: 0, duration: 0, edgeCount: 0 };
-      
-      const timeTotalCount = bobTime.count + flTime.count + socialTime.count;
-      const timeTotalDuration = bobTime.duration + flTime.duration + socialTime.duration;
-      const timeTotalEdgeCount = bobTime.edgeCount + flTime.edgeCount + socialTime.edgeCount;
-
-      if (timeTotalCount > 0) {
-        acc[timeId] = { count: timeTotalCount, duration: timeTotalDuration, edgeCount: timeTotalEdgeCount };
+      const timeId = time.id;
+      const timeData = {
+          count: (stats.BOB.byTime[timeId]?.count || 0) + (stats.FL.byTime[timeId]?.count || 0) + (stats.SOCIAL.byTime[timeId]?.count || 0),
+          duration: (stats.BOB.byTime[timeId]?.duration || 0) + (stats.FL.byTime[timeId]?.duration || 0) + (stats.SOCIAL.byTime[timeId]?.duration || 0),
+          edgeCount: (stats.BOB.byTime[timeId]?.edgeCount || 0) + (stats.FL.byTime[timeId]?.edgeCount || 0) + (stats.SOCIAL.byTime[timeId]?.edgeCount || 0),
+      };
+      if (timeData.count > 0) {
+        acc[timeId] = timeData;
       }
       return acc;
     }, {} as { [key in TimeOfDay]?: {count: number, duration: number, edgeCount: number} });
 
-    return { bobStats, flStats, socialStats, partnerCounts, total, totalDuration, totalEdgeCount, totalCountsByTime };
+    return { bobStats: stats.BOB, flStats: stats.FL, socialStats: stats.SOCIAL, partnerCounts, total, totalDuration, totalEdgeCount, totalCountsByTime };
   }, [allEntries, month]);
 
 
@@ -171,7 +173,7 @@ export function MonthlySummary({ month }: MonthlySummaryProps) {
           <>
             <Separator />
             <p className="font-medium text-muted-foreground pt-2">Partners</p>
-            {Object.entries(partnerCounts).map(([name, count]) => (
+            {Object.entries(partnerCounts).sort((a,b) => b[1] - a[1]).map(([name, count]) => (
               <div key={name} className="flex justify-between items-center p-3 rounded-lg bg-destructive/10 text-card-foreground">
                 <span className="font-medium">{name}</span>
                  <div className="text-right">
