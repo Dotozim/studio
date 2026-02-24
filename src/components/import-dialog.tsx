@@ -12,11 +12,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { useLegacyHabitStore, useHabitStore } from "@/lib/store";
-import type { OldHabitEntry, TimeOfDay, Habit, LoggedHabit, HabitType } from "@/lib/types";
+import { useHabitStore } from "@/lib/store";
+import type { TimeOfDay, LoggedHabit, HabitType } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "./ui/label";
-import { produce } from "immer";
 import { set, parseISO } from 'date-fns';
 
 type ImportDialogProps = {
@@ -24,8 +23,7 @@ type ImportDialogProps = {
   setIsOpen: (isOpen: boolean) => void;
 };
 
-const validTimes: TimeOfDay[] = ["dawn", "morning", "afternoon", "night"];
-const habitKeywords: string[] = ["BOB", "FL", "1"];
+const validTimes: TimeOfDay[] = ["dawn", "morning", "afternoon", "night", "not-sure"];
 
 const getTimeOfDayDate = (date: Date, time: TimeOfDay): Date => {
     switch (time) {
@@ -33,9 +31,25 @@ const getTimeOfDayDate = (date: Date, time: TimeOfDay): Date => {
         case 'morning': return set(date, { hours: 9, minutes: 0, seconds: 0 });
         case 'afternoon': return set(date, { hours: 14, minutes: 0, seconds: 0 });
         case 'night': return set(date, { hours: 21, minutes: 0, seconds: 0 });
-        default: return date;
+        case 'not-sure':
+        default:
+            const randomHour = 8 + Math.floor(Math.random() * 12); // 8am to 7pm
+            return set(date, { hours: randomHour, minutes: 0, seconds: 0 });
     }
 }
+
+const parseDurationToSeconds = (durationStr: string): number => {
+    let totalSeconds = 0;
+    const minutesMatch = durationStr.match(/(\d+)\s*m/);
+    const secondsMatch = durationStr.match(/(\d+)\s*s/);
+    if (minutesMatch) {
+        totalSeconds += parseInt(minutesMatch[1], 10) * 60;
+    }
+    if (secondsMatch) {
+        totalSeconds += parseInt(secondsMatch[1], 10);
+    }
+    return totalSeconds;
+};
 
 export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
   const [importData, setImportData] = useState("");
@@ -44,49 +58,42 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
 
   const handleImport = () => {
     const lines = importData.trim().split('\n');
-    if (lines.length < 2) {
-        toast({
-            variant: "destructive",
-            title: "Invalid Format",
-            description: "The import data is not in the correct format.",
-        });
-        return;
-    }
+    if (lines.length === 0) return;
 
-    const year = parseInt(lines[0].trim(), 10);
-    if (isNaN(year)) {
-        toast({
-            variant: "destructive",
-            title: "Invalid Year",
-            description: "The first line must be a valid year.",
-        });
-        return;
+    let year: number;
+    const firstLineAsYear = parseInt(lines[0].trim(), 10);
+    if (!isNaN(firstLineAsYear) && firstLineAsYear > 1900 && firstLineAsYear < 2100) {
+        year = firstLineAsYear;
+        lines.shift(); // remove year line
+    } else {
+        year = new Date().getFullYear();
     }
     
     let importedCount = 0;
 
-    for (let i = 1; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (line === "") continue;
+    for (const line of lines) {
+        const trimmedLine = line.trim();
+        if (trimmedLine === "") continue;
 
-        const parts = line.split(/\s+/).map(p => p.trim());
-        const datePart = parts[0];
+        const dateMatch = trimmedLine.match(/^(\d{1,2}\/\d{1,2}(?:\/\d{2,4})?)\s*/);
+        if (!dateMatch) continue;
         
-        const dateSegments = datePart.split('/');
-        if (dateSegments.length !== 2) continue;
+        const dateStr = dateMatch[1];
+        const dateSegments = dateStr.split('/');
+        if (dateSegments.length < 2) continue;
 
         const day = parseInt(dateSegments[0], 10);
         const month = parseInt(dateSegments[1], 10);
+        const lineYear = dateSegments.length === 3 ? parseInt(dateSegments[2], 10) : year;
 
         if (isNaN(day) || isNaN(month) || day < 1 || day > 31 || month < 1 || month > 12) {
             continue;
         }
 
-        const dateStr = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-        const baseDate = parseISO(dateStr);
+        const baseDate = parseISO(`${lineYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
+        let remainingLine = trimmedLine.substring(dateMatch[0].length).trim();
         
-        const habitsInLine = parts.slice(1);
-        if (habitsInLine.length === 0) { // Just date, so it's a BOB
+        if (remainingLine === "") {
             addHabit({
                 type: 'BOB',
                 startTime: getTimeOfDayDate(baseDate, 'not-sure').toISOString(),
@@ -96,44 +103,77 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
             continue;
         }
         
-        let currentHabit: { type: HabitType, partners?: string[], count: number} | null = null;
+        const chunks = remainingLine.split(/\s+(?=(?:1|BOB|FL|[A-Z][a-zA-ZÀ-ÿ'´`]+)(?:\s|$))/i);
         
-        const processCurrentHabit = (time: TimeOfDay) => {
-            if (!currentHabit) return;
-
-            for(let i=0; i<currentHabit.count; i++) {
-                addHabit({
-                    type: currentHabit.type,
-                    startTime: getTimeOfDayDate(baseDate, time).toISOString(),
-                    duration: 0,
-                    partners: currentHabit.partners,
-                });
+        for (const chunk of chunks) {
+            if (chunk.trim() === "") continue;
+            
+            const tokens = chunk.trim().split(/\s+/);
+            const marker = tokens.shift() || "";
+            let content = tokens.join(' ');
+            
+            let habit: Partial<Omit<LoggedHabit, 'id'>> & { type: HabitType } | null = null;
+            
+            if (marker.toLowerCase() === '1' || marker.toLowerCase() === 'bob') {
+                habit = { type: 'BOB' };
+            } else if (marker.toLowerCase() === 'fl') {
+                habit = { type: 'FL' };
+            } else if (/^[A-Z][a-zA-ZÀ-ÿ'´`]+$/.test(marker)) {
+                habit = { type: 'SOCIAL', partners: [marker] };
             }
+
+            if (!habit) continue;
+            
+            const legacyTimeMatch = content.match(/^(dawn|morning|afternoon|night)$/i);
+            if(legacyTimeMatch) {
+                habit.startTime = getTimeOfDayDate(baseDate, legacyTimeMatch[1].toLowerCase() as TimeOfDay).toISOString();
+                habit.duration = 0;
+                addHabit(habit as Omit<LoggedHabit, 'id'>);
+                importedCount++;
+                continue;
+            }
+
+            let notes = '';
+            const timeMatch = content.match(/(\d{1,2}:\d{2})/);
+            if (timeMatch) {
+                const timeStr = timeMatch[1];
+                const timeIndex = content.indexOf(timeStr);
+                notes = content.substring(timeIndex + timeStr.length).trim();
+                content = content.substring(0, timeIndex).trim();
+
+                const [h, m] = timeStr.split(':').map(Number);
+                habit.startTime = set(baseDate, { hours: h, minutes: m, seconds: 0 }).toISOString();
+            } else {
+                 notes = content;
+                 content = '';
+            }
+
+            if(habit.type === 'SOCIAL' && content.trim() === '') {
+                habit.notes = notes;
+                notes = '';
+            }
+            if (notes) {
+                habit.notes = notes;
+            }
+
+            const edgeMatch = content.match(/(\d+)\s+edge(s?)/i);
+            if (edgeMatch) {
+                habit.edgeCount = parseInt(edgeMatch[1], 10);
+                content = content.replace(edgeMatch[0], '').trim();
+            }
+
+            habit.duration = parseDurationToSeconds(content);
+            
+            if (!habit.startTime) {
+                 habit.startTime = getTimeOfDayDate(baseDate, 'not-sure').toISOString();
+            }
+            if (habit.duration === undefined) {
+                 habit.duration = 0;
+            }
+
+            addHabit(habit as Omit<LoggedHabit, 'id'>);
             importedCount++;
-            currentHabit = null;
         }
-
-        for (let j = 0; j < habitsInLine.length; j++) {
-            const part = habitsInLine[j];
-            const partUpper = part.toUpperCase();
-
-            if (validTimes.includes(part.toLowerCase() as TimeOfDay)) {
-                processCurrentHabit(part.toLowerCase() as TimeOfDay);
-            } else if (part.toLowerCase().startsWith('x') && !isNaN(parseInt(part.substring(1)))) {
-                if (currentHabit) {
-                    currentHabit.count = parseInt(part.substring(1));
-                }
-            } else { // It's a new habit or partner
-                processCurrentHabit('not-sure'); // process previous habit with default time
-                
-                if (habitKeywords.includes(partUpper)) {
-                    currentHabit = { type: (partUpper === '1' ? 'BOB' : partUpper as Habit), count: 1 };
-                } else { // partner name
-                    currentHabit = { type: 'SOCIAL', partners: [part], count: 1 };
-                }
-            }
-        }
-        processCurrentHabit('not-sure'); // process any leftover habit
     }
 
     toast({
@@ -145,21 +185,26 @@ export function ImportDialog({ isOpen, setIsOpen }: ImportDialogProps) {
     setIsOpen(false);
   };
 
-
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Import Data</DialogTitle>
           <DialogDescription>
-            Paste your data below. Format: Year, then DD/MM [HABIT/Partner] [time] [xCount] on new lines.
+            Paste your data below. One entry per line, with the year on the first line.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
             <Label htmlFor="import-data">Data</Label>
             <Textarea
                 id="import-data"
-                placeholder="2024\n01/07 BOB morning\n03/07 FL x2\n05/07 Alice night..."
+                placeholder={`2024
+01/01 1 20:16 7m 42s
+12/02 1 16:00 1 edge 13m
+11/01 Bharbara 21:00 Boquete e siririca...
+07/02 1 15:36 3m 32s Bharbara 00:00 Ambos gozamos
+27/08
+20/05 1 Bharbara recaída...`}
                 value={importData}
                 onChange={(e) => setImportData(e.target.value)}
                 className="min-h-[200px]"
